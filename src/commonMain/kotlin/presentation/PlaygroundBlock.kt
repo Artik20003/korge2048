@@ -1,6 +1,7 @@
 package presentation
 
 import Constants
+import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
 import com.soywiz.korge.animate.tween
 import com.soywiz.korge.input.*
@@ -61,11 +62,32 @@ class UIPlaygroundBlock(
             x = getXPosition(animationState),
             y = getYPosition(animationState)
         )
-            container {
-                block(power)
-                text(animationState.toString())
-            }
 
+        container {
+            block(power)
+            text(animationState.toString())
+        }
+
+        if(playgroundAnimationState == AnimationState.BLOCKS_COLLAPSING){
+            collapsingState?.let {
+                launchImmediately( Dispatchers.Default) {
+                    animate {
+                        parallel {
+                            moveTo(
+                                view = playgroundBlock,
+                                x = getXPosition(PlayBlockAnimationState.COLLAPSED),
+                                y = getYPosition(PlayBlockAnimationState.COLLAPSED),
+                                time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                            )
+
+                        }
+                        block {
+                            onNewBlockAnimationFinished()
+                        }
+                    }
+                }
+            }
+        }
         if(animationState == PlayBlockAnimationState.BOTTOM) {
             launchImmediately( Dispatchers.Default) {
                animate {
@@ -74,6 +96,7 @@ class UIPlaygroundBlock(
                            view = playgroundBlock,
                            x = getXPosition(PlayBlockAnimationState.PLACED),
                            y = getYPosition(PlayBlockAnimationState.PLACED),
+                           time = TimeSpan(Constants.Playground.ANIMATION_TIME)
                        )
 
                    }
@@ -84,6 +107,7 @@ class UIPlaygroundBlock(
             }
 
         }
+
 
     }
 

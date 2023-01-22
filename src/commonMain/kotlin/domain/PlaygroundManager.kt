@@ -2,6 +2,7 @@ package domain
 
 import com.soywiz.korio.util.*
 import kotlinx.coroutines.flow.*
+import kotlin.random.*
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -26,7 +27,7 @@ class PlaygroundManager {
     }
 
     private fun getGeneratedValue(): Int{
-        return (state.value.currentMin .. state.value.currentMax).random()
+        return Random(3).nextInt(state.value.currentMin, state.value.currentMax)
     }
 
     fun push(column: Int){
@@ -65,38 +66,33 @@ class PlaygroundManager {
         generateUpcomingValues()
         preparePlaygroundForCollapsing()
 
-        updatePlaygroundAnimationState()
+        //updatePlaygroundAnimationState()
 
 
     }
 
-    private fun updatePlaygroundAnimationState() {
+    fun updatePlaygroundAnimationState() {
 
 
         var newPlaygroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> =
             state.value.playgroundBlocksAnimatingState.toMutableMap()
 
-        /*
-        for (elem in state.value.playgroundBlocksAnimatingState){
-            if(elem.value.animatingState == PlayBlockAnimationState.BOTTOM){
-                newPlaygroundBlocksAnimatingState =
-                    state.value.playgroundBlocksAnimatingState.toMutableMap()
-
-                newPlaygroundBlocksAnimatingState[elem.key]
-                    ?.animatingState = PlayBlockAnimationState.PLACED
-
-                break
-            }
-        }
-
-         */
 
         iterateBlocks { col, row, block ->
             when(state.value.animationState){
                 AnimationState.BLOCKS_COLLAPSING -> {
+
+                    if(state.value.playgroundBlocksAnimatingState[block.id]!!
+                            .animatingState == PlayBlockAnimationState.BOTTOM) {
+                        newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
+                            PlayBlockAnimationState.PLACED
+                    }
+
+
                     if(block.collapsingState != null)
                         newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
                             PlayBlockAnimationState.COLLAPSED
+
                 }
                 AnimationState.BLOCKS_MOVING -> {
                     if(block.movingState !== null)
@@ -151,12 +147,9 @@ class PlaygroundManager {
             }
         }
 
-        updatePlaygroundAnimationState()
-
-
-
-        println(animationState)
+        //println(animationState)
         state.value = state.value.copy(animationState = animationState)
+        //updatePlaygroundAnimationState()
 
     }
 
