@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.*
 
 @OptIn(FlowPreview::class)
 class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
-    val cellSize = 50
+    val cellSize = SizeAdapter.cellSize
 
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -96,12 +96,12 @@ class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
                 }
             )
             .position(
-                x = colNum * cellSize,
+                x = (colNum * cellSize).toInt(),
                 y = 0
             )
         }
 
-        text(playgroundManager.state.value.animationState.toString()).position(0, cellSize* Constants.Playground.ROW_COUNT + 2)
+        text(playgroundManager.state.value.animationState.toString()).position(0, (cellSize* Constants.Playground.ROW_COUNT + 2).toInt())
 
     }
 

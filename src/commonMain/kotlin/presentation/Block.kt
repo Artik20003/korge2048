@@ -7,15 +7,16 @@ import com.soywiz.korim.color.*
 import domain.*
 import kotlin.math.*
 
-fun Container.block(power: Int) =
+fun Container.block(power: Int, cellSize: Double) =
     Block(
-        power = power
+        power = power,
+        cellSize = cellSize
     ).addTo(this)
 
 class Block(
-    val power: Int
+    val power: Int,
+    val cellSize: Double
 ) : Container() {
-    val cellSize: Double = 50.0
 
     init {
         roundRect(cellSize, cellSize, 5.0, fill = PlayBlockColor.getColorByPower(power))

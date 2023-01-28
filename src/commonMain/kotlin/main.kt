@@ -11,7 +11,10 @@ import com.soywiz.korma.interpolation.*
 import domain.*
 import presentation.*
 
-suspend fun main() = Korge(width = 480, height = 640, bgcolor = Colors["#2b2b2b"]) {
+suspend fun main() = Korge(width = 500, height = 600,
+    virtualWidth = 250, virtualHeight = 300,  bgcolor = Colors["#2b2b2b"],
+    scaleAnchor = Anchor.CENTER
+) {
 	val sceneContainer = sceneContainer()
     val playgroundManager = PlaygroundManager()
 	sceneContainer.changeTo({ PlayScene(playgroundManager) })

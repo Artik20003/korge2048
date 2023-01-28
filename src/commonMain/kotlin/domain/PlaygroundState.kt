@@ -36,19 +36,27 @@ data class PlaygroundState(
             mutableListOf(),
             mutableListOf(),
 
-
             ),
     ),
+
+    var level: Int = 1,
+    val score: Long = 0,
+
     var playgroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> = emptyMap(),
 
     val upcomingValues: List<Int> = emptyList(),
-    val currentMin: Int = 1,
-    val score: Long = 0,
+
     val lastAddedColumn: Int? = null,
     val animationState: AnimationState = AnimationState.STATIC,
 
     ){
-    val currentMax = currentMin + Constants.Playground.AVAILABLE_GENERATING_SPREAD
+
+
+    val upcomingMin: Int
+        get() = level
+    val upcomingMax: Int
+        get() = upcomingMin + Constants.Playground.AVAILABLE_GENERATING_SPREAD
+
     val hasBlocksToCollapse: Boolean
         get() =
             playground.blocks.map {
