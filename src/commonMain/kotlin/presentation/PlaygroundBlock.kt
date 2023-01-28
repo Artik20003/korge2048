@@ -3,16 +3,10 @@ package presentation
 import Constants
 import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
-import com.soywiz.korge.animate.tween
-import com.soywiz.korge.input.*
-import com.soywiz.korge.tween.*
 import com.soywiz.korge.view.*
-import com.soywiz.korge.view.tween.*
-import com.soywiz.korim.color.*
 import com.soywiz.korio.async.*
 import domain.*
 import kotlinx.coroutines.*
-import kotlin.math.*
 
 fun Container.playgroundBlock(
     col: Int,
@@ -42,22 +36,22 @@ fun Container.playgroundBlock(
     ).addTo(this)
 
 class UIPlaygroundBlock(
-    val col: Int,
-    val row: Int,
-    val power: Int,
-    val animationState: PlayBlockAnimationState,
-    val playgroundAnimationState: AnimationState,
-    val targetPower: Int? = null,
-    val collapsingState: PlaygroundBlock.ChangingState? = null,
-    val movingState: PlaygroundBlock.ChangingState? = null,
-    val onNewBlockAnimationFinished: () -> Unit,
-    val onCollapseBlockAnimationFinished: () -> Unit,
-    val onMoveBlockAnimationFinished: () -> Unit
+    var col: Int,
+    var row: Int,
+    var power: Int,
+    var animationState: PlayBlockAnimationState,
+    var playgroundAnimationState: AnimationState,
+    var targetPower: Int? = null,
+    var collapsingState: PlaygroundBlock.ChangingState? = null,
+    var movingState: PlaygroundBlock.ChangingState? = null,
+    var onNewBlockAnimationFinished: () -> Unit,
+    var onCollapseBlockAnimationFinished: () -> Unit,
+    var onMoveBlockAnimationFinished: () -> Unit
 ) : Container() {
     val blockSize: Double = 50.0
     val playgroundBlock = this
     init {
-        val defaultOffsetY = (row * blockSize)
+
         position(
             x = getXPosition(animationState),
             y = getYPosition(animationState)
@@ -65,29 +59,9 @@ class UIPlaygroundBlock(
 
         container {
             block(power)
-            text(animationState.toString())
+            //text(animationState.toString())
         }
 
-        if(playgroundAnimationState == AnimationState.BLOCKS_COLLAPSING){
-            collapsingState?.let {
-                launchImmediately( Dispatchers.Default) {
-                    animate {
-                        parallel {
-                            moveTo(
-                                view = playgroundBlock,
-                                x = getXPosition(PlayBlockAnimationState.COLLAPSED),
-                                y = getYPosition(PlayBlockAnimationState.COLLAPSED),
-                                time = TimeSpan(Constants.Playground.ANIMATION_TIME),
-                            )
-
-                        }
-                        block {
-                            onNewBlockAnimationFinished()
-                        }
-                    }
-                }
-            }
-        }
         if(animationState == PlayBlockAnimationState.BOTTOM) {
             launchImmediately( Dispatchers.Default) {
                animate {
@@ -105,10 +79,7 @@ class UIPlaygroundBlock(
                    }
                }
             }
-
         }
-
-
     }
 
     private fun getYPosition(animationState: PlayBlockAnimationState): Double{
@@ -128,6 +99,57 @@ class UIPlaygroundBlock(
             PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetCol ?: col)  * blockSize
             PlayBlockAnimationState.MOVED -> (movingState?.targetCol ?: col)  * blockSize
             else -> col * blockSize
+        }
+    }
+
+    fun collapseIfNeeded() {
+        collapsingState?.let {
+            // draw current block and target on top. Then current will fade out so the target will be seen
+            block(power = targetPower ?: power)
+            val blockToVanish = block(power)
+
+            launchImmediately( Dispatchers.Default) {
+                animate {
+                    parallel {
+                        moveTo(
+                            view = playgroundBlock,
+                            x = getXPosition(PlayBlockAnimationState.COLLAPSED),
+                            y = getYPosition(PlayBlockAnimationState.COLLAPSED),
+                            time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                        )
+                        hide(
+                            view = blockToVanish,
+                            time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                        )
+                    }
+                    block {
+                        if(col != it.targetCol || row != it.targetRow){
+                            playgroundBlock.removeFromParent()
+                        }
+                        onCollapseBlockAnimationFinished()
+                    }
+                }
+            }
+        }
+    }
+
+    fun moveIfNeeded() {
+        movingState?.let {
+            launchImmediately( Dispatchers.Default) {
+                animate {
+                    parallel {
+                        moveTo(
+                            view = playgroundBlock,
+                            x = getXPosition(PlayBlockAnimationState.MOVED),
+                            y = getYPosition(PlayBlockAnimationState.MOVED),
+                            time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                        )
+                    }
+                    block {
+                        onMoveBlockAnimationFinished()
+                    }
+                }
+            }
         }
     }
 

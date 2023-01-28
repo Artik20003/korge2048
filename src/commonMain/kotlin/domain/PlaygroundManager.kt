@@ -1,5 +1,6 @@
 package domain
 
+import Constants
 import com.soywiz.korio.util.*
 import kotlinx.coroutines.flow.*
 import kotlin.random.*
@@ -71,54 +72,7 @@ class PlaygroundManager {
 
     }
 
-    fun updatePlaygroundAnimationState() {
 
-
-        var newPlaygroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> =
-            state.value.playgroundBlocksAnimatingState.toMutableMap()
-
-
-        iterateBlocks { col, row, block ->
-            when(state.value.animationState){
-                AnimationState.BLOCKS_COLLAPSING -> {
-
-                    if(state.value.playgroundBlocksAnimatingState[block.id]!!
-                            .animatingState == PlayBlockAnimationState.BOTTOM) {
-                        newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
-                            PlayBlockAnimationState.PLACED
-                    }
-
-
-                    if(block.collapsingState != null)
-                        newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
-                            PlayBlockAnimationState.COLLAPSED
-
-                }
-                AnimationState.BLOCKS_MOVING -> {
-                    if(block.movingState !== null)
-                        newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
-                            PlayBlockAnimationState.MOVED
-                    if(
-                        block.collapsingState !== null && (
-                            block.collapsingState?.targetCol !== col ||
-                                block.collapsingState?.targetRow !== row
-                            )
-                    ) {
-                        newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
-                            PlayBlockAnimationState.DISAPPEARED
-                    }
-                }
-                AnimationState.STATIC -> {
-                    newPlaygroundBlocksAnimatingState[block.id]?.animatingState =
-                        PlayBlockAnimationState.PLACED
-                }
-                else -> Unit
-            }
-
-        }
-
-        state.value = state.value.copy(playgroundBlocksAnimatingState = newPlaygroundBlocksAnimatingState)
-    }
 
     fun setAnimationState(animationState: AnimationState){
 
@@ -328,7 +282,7 @@ class PlaygroundManager {
 
 
     private fun moveBlocks() {
-        println("moveblocks")
+
         val newPlayground = Playground()
         iterateBlocks {col, row, block ->
             block.collapsingState?.let { collapsingState ->
@@ -368,7 +322,7 @@ class PlaygroundManager {
 
         }
 
-        var newPlaygroundBlocksAnimatingState:
+        val newPlaygroundBlocksAnimatingState:
             MutableMap<UUID, PlaygroundBlockAnimatingState> = mutableMapOf()
 
         iterateBlocks {col, row, block ->
@@ -392,7 +346,7 @@ class PlaygroundManager {
             }
         }
     }
-
+    /*
     private fun logPlayground(){
         var log = "  "
 
@@ -415,6 +369,7 @@ class PlaygroundManager {
         }
         println(log)
     }
+     */
 
 
 }
