@@ -28,7 +28,7 @@ class PlaygroundManager {
     }
 
     private fun getGeneratedValue(): Int{
-        return Random(3).nextInt(state.value.currentMin, state.value.currentMax)
+        return Random(3).nextInt(state.value.upcomingMin, state.value.upcomingMax)
     }
 
     fun push(column: Int){
@@ -72,7 +72,16 @@ class PlaygroundManager {
 
     }
 
-
+    fun updateLevel() {
+        println("Updating level")
+        println("${state.value.level} ${state.value.upcomingMin} ${state.value.upcomingMax}")
+        iterateBlocks { col, row, block ->
+            if (block.power >= state.value.level + Constants.Playground.NEXT_LEVEL_SPREAD){
+                state.value.level++
+                return@iterateBlocks
+            }
+        }
+    }
 
     fun setAnimationState(animationState: AnimationState){
 
@@ -80,7 +89,6 @@ class PlaygroundManager {
 
             // if nothing to collapse set STATIC animation state.value
             if(!state.value.hasBlocksToCollapse){
-
                 setAnimationState(AnimationState.STATIC)
                 return
             }
@@ -99,6 +107,7 @@ class PlaygroundManager {
                 setAnimationState(AnimationState.BLOCKS_COLLAPSING)
                 return
             }
+            updateLevel()
         }
 
         //println(animationState)

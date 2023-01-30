@@ -58,7 +58,7 @@ class UIPlaygroundBlock(
         )
 
         container {
-            block(power)
+            block(power=power, cellSize = blockSize)
             //text(animationState.toString())
         }
 
@@ -105,8 +105,8 @@ class UIPlaygroundBlock(
     fun collapseIfNeeded() {
         collapsingState?.let {
             // draw current block and target on top. Then current will fade out so the target will be seen
-            block(power = targetPower ?: power)
-            val blockToVanish = block(power)
+            block(power = targetPower ?: power, cellSize = blockSize)
+            val blockToVanish = block(power, cellSize = blockSize)
 
             launchImmediately( Dispatchers.Default) {
                 animate {
