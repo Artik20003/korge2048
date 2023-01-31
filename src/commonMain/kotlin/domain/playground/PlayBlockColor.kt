@@ -2,7 +2,6 @@ package domain.playground
 
 import com.soywiz.korim.color.*
 
-
 class PlayBlockColor {
     companion object {
         private val colorSet = listOf<RGBA>(
@@ -23,6 +22,4 @@ class PlayBlockColor {
         )
         fun getColorByPower(power: Int) = colorSet[power % colorSet.size]
     }
-
-
 }

@@ -5,5 +5,4 @@ object CellSizeAdapter {
         get() {
             return 50.0
         }
-
 }

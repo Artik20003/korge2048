@@ -15,7 +15,6 @@ data class PlaygroundState(
             mutableListOf(),
             mutableListOf(),
 
-
          /*   mutableListOf(
                 PlaygroundBlock(power = 7),
             ),
@@ -34,7 +33,7 @@ data class PlaygroundState(
         ),
     ),
 
-    //var level: Int = 1,
+    // var level: Int = 1,
     val score: Long = 0,
 
     var playgroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> = emptyMap(),
@@ -46,7 +45,6 @@ data class PlaygroundState(
     var upcomingMin: Int = 1,
 ) {
 
-
     val upcomingMax: Int
         get() = upcomingMin + Constants.Playground.AVAILABLE_GENERATING_SPREAD
 
@@ -55,7 +53,6 @@ data class PlaygroundState(
             playground.blocks.map {
                 val havingChangingStateElem = it.find { it.collapsingState !== null }
                 havingChangingStateElem != null
-
             }.contains(true)
     val hasBlocksToMove: Boolean
         get() =
@@ -105,5 +102,4 @@ enum class PlayBlockAnimationState() {
     MOVED,
     COLLAPSED,
     DISAPPEARED
-
 }
