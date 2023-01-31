@@ -6,8 +6,8 @@ import com.soywiz.korma.geom.*
 import presentation.*
 
 suspend fun main() = Korge(
-    width = 960, height = 1280,
-    virtualWidth = 960, virtualHeight = 1280, bgcolor = Colors["#2b2b2b"],
+    width = 500, height = 600,
+    virtualWidth = 500, virtualHeight = 600, bgcolor = Colors["#2b2b2b"],
     scaleAnchor = Anchor.CENTER
 ) {
     val sceneContainer = sceneContainer()
