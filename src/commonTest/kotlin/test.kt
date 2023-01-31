@@ -5,9 +5,26 @@ import com.soywiz.korge.tween.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import com.soywiz.korma.geom.*
+import domain.playground.*
+import presentation.*
 import kotlin.test.*
 
 class MyTest : ViewsForTesting() {
+    @Test
+    fun testBlockText() = viewsTest {
+        var testBlock = playgroundBlock(
+            col=0,
+            row=0,
+            power=15,
+            playgroundAnimationState=AnimationState.STATIC,
+            animationState = PlayBlockAnimationState.PLACED,
+            onCollapseBlockAnimationFinished = {},
+            onMoveBlockAnimationFinished = {},
+            onNewBlockAnimationFinished = {})
+
+        assertEquals("32K", testBlock.getBlockText())
+    }
+
     @Test
     fun test() = viewsTest {
         val log = arrayListOf<String>()
