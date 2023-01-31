@@ -59,10 +59,13 @@ class PlayScene() : Scene() {
             playgroundManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
-        scoreManager.state.onEach {
-            println("Updating score: ${it.score}")
-            redrawScore(it.score)
-        }.launchIn(CoroutineScope(Dispatchers.Default))
+
+        // UI score
+        text(scoreManager.state.value.score.toString(), textSize = 16.0){
+            scoreManager.state.onEach {
+                text = it.score.toString()
+            }.launchIn(CoroutineScope(Dispatchers.Default))
+        }
 
     }
 
@@ -149,8 +152,8 @@ class PlayScene() : Scene() {
         }
     }
 
-    fun SContainer.redrawScore(score: Int) {
-        text(score.toString(), textSize = 16.0).position((cellSize * (Constants.Playground.COL_COUNT - 2)).toInt(),(cellSize* Constants.Playground.ROW_COUNT + 2).toInt())
-    }
+
+
+
 
 }
