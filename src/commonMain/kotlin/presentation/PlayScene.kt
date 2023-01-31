@@ -15,7 +15,7 @@ import presentation.adapters.*
 
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
-    val cellSize = СellSizeAdapter.cellSize
+    val cellSize = CellSizeAdapter.cellSize
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     val scoreManager: ScoreManager = ScoreManager(playgroundManager.state.value.playground)
