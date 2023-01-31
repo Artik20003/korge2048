@@ -11,6 +11,7 @@ class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
         private set
     private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private var collapsedHanlderList: MutableList<() -> Unit> = mutableListOf()
 
     init {
         generateUpcomingValues()
@@ -19,6 +20,15 @@ class PlaygroundManager {
     fun addOnStaticStateListener(handler: () -> Unit) {
         staticHandlerList.add(handler)
     }
+
+    fun addOnCollapsedStateListener(handler: () -> Unit) {
+        collapsedHanlderList.add(handler)
+    }
+
+    fun launchOnCollapsedStateHandlers() {
+        collapsedHanlderList.forEach { it() }
+    }
+
 
     fun launchOnStaticStateHandlers() {
         staticHandlerList.forEach { it() }
@@ -95,6 +105,7 @@ class PlaygroundManager {
                     setAnimationState(STATIC)
                     return
                 }
+                launchOnCollapsedStateHandlers()
             }
 
             BLOCKS_MOVING -> {
