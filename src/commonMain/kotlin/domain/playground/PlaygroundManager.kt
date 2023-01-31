@@ -1,23 +1,37 @@
-package domain
+package domain.playground
 
 import Constants
 import com.soywiz.korio.util.*
+import domain.playground.AnimationState.*
 import kotlinx.coroutines.flow.*
+import kotlin.collections.set
 import kotlin.random.*
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
         private set
-
+    private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
 
     init {
         generateUpcomingValues()
     }
-    private fun generateUpcomingValues(){
+
+    fun addOnStaticStateListener(handler: () -> Unit) {
+        staticHandlerList.add(handler)
+    }
+
+    fun launchOnStaticStateHandlers() {
+        staticHandlerList.forEach { it() }
+    }
+
+    fun setMinUpcomingValue(value: Int){
+        state.value = state.value.copy(upcomingMin = value)
+    }
+    private fun generateUpcomingValues() {
         state.update {
-            if(state.value.upcomingValues.isEmpty()){
+            if (state.value.upcomingValues.isEmpty()) {
                 it.copy(
-                    upcomingValues = listOf(getGeneratedValue(), getGeneratedValue() )
+                    upcomingValues = listOf(getGeneratedValue(), getGeneratedValue())
                 )
             } else {
                 it.copy(
@@ -27,21 +41,21 @@ class PlaygroundManager {
         }
     }
 
-    private fun getGeneratedValue(): Int{
+    private fun getGeneratedValue(): Int {
         return Random(3).nextInt(state.value.upcomingMin, state.value.upcomingMax)
     }
 
-    fun push(column: Int){
+    fun push(column: Int) {
 
-        if(column !in 0 until Constants.Playground.COL_COUNT)
+        if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
         if (state.value.playground.blocks[column].size >= Constants.Playground.ROW_COUNT) return
-        if(state.value.animationState != AnimationState.STATIC) return
+        if (state.value.animationState != STATIC) return
 
         //start animation
         state.value = state.value.copy(
-            lastAddedColumn =  column,
-            animationState = AnimationState.NEW_BLOCK_PLACING,
+            lastAddedColumn = column,
+            animationState = NEW_BLOCK_PLACING,
         )
 
         val newPlaygroundBlock = PlaygroundBlock(
@@ -72,47 +86,40 @@ class PlaygroundManager {
 
     }
 
-    fun updateLevel() {
-        println("Updating level")
-        println("${state.value.level} ${state.value.upcomingMin} ${state.value.upcomingMax}")
-        iterateBlocks { col, row, block ->
-            if (block.power >= state.value.level + Constants.Playground.NEXT_LEVEL_SPREAD){
-                state.value.level++
-                return@iterateBlocks
-            }
-        }
-    }
 
-    fun setAnimationState(animationState: AnimationState){
+    fun setAnimationState(animationState: AnimationState) {
+        when (animationState) {
+            BLOCKS_COLLAPSING -> {
+                // if nothing to collapse set STATIC animation state.value
+                if (!state.value.hasBlocksToCollapse) {
+                    setAnimationState(STATIC)
+                    return
+                }
+            }
 
-        if(animationState == AnimationState.BLOCKS_COLLAPSING){
+            BLOCKS_MOVING -> {
+                preparePlaygroundForMoving()
+                if (!state.value.hasBlocksToMove) {
+                    setAnimationState(STATIC)
+                    return
+                }
+            }
 
-            // if nothing to collapse set STATIC animation state.value
-            if(!state.value.hasBlocksToCollapse){
-                setAnimationState(AnimationState.STATIC)
-                return
+            STATIC -> {
+                moveBlocks()
+                preparePlaygroundForCollapsing()
+                if (state.value.hasBlocksToCollapse) {
+                    setAnimationState(BLOCKS_COLLAPSING)
+                    return
+                }
+                launchOnStaticStateHandlers()
             }
-        }
-        if(animationState == AnimationState.BLOCKS_MOVING){
-            preparePlaygroundForMoving()
-            if(!state.value.hasBlocksToMove){
-                setAnimationState(AnimationState.STATIC)
-                return
-            }
-        }
-        if(animationState == AnimationState.STATIC) {
-            moveBlocks()
-            preparePlaygroundForCollapsing()
-            if(state.value.hasBlocksToCollapse){
-                setAnimationState(AnimationState.BLOCKS_COLLAPSING)
-                return
-            }
-            updateLevel()
+
+            else -> Unit
         }
 
-        //println(animationState)
         state.value = state.value.copy(animationState = animationState)
-        //updatePlaygroundAnimationState()
+
 
     }
 
@@ -127,32 +134,32 @@ class PlaygroundManager {
             //_*_
             //*@*
             listOf(
-                Pair(0,-1),
+                Pair(0, -1),
                 Pair(1, 0),
-                Pair(-1,0),
+                Pair(-1, 0),
             ),
             // *_
             // @*
             listOf(
-                Pair(0,-1),
+                Pair(0, -1),
                 Pair(1, 0)
             ),
             // *@*
             listOf(
-                Pair(-1,0),
+                Pair(-1, 0),
                 Pair(1, 0)
             ),
             // *@
             // _*
             listOf(
-                Pair(0,1),
-                Pair(-1,0)
+                Pair(0, 1),
+                Pair(-1, 0)
             ),
             // @*
             // *_
             listOf(
-                Pair(0,1),
-                Pair(-1,0)
+                Pair(0, 1),
+                Pair(-1, 0)
             ),
             // _*
             // *@
@@ -163,33 +170,34 @@ class PlaygroundManager {
             //@
             //*
             listOf(
-                Pair(0,1)
+                Pair(0, 1)
             )
 
         )
 
         // finding figures to collapse
         figures.forEach { figure ->
-            iterateBlocks {col, row, block ->
-                var hasFigure  = true
-                figure.forEach{ shiftCoords ->
-                    if(
+            state.value.playground.iterateBlocks { col, row, block ->
+                var hasFigure = true
+                figure.forEach { shiftCoords ->
+                    if (
                         !(
-                            blockExists(col + shiftCoords.first, row + shiftCoords.second )
+                            blockExists(col + shiftCoords.first, row + shiftCoords.second)
                                 && state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].power ==
                                 block.power
                                 && state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].collapsingState == null
                             )
-                    ){
+                    ) {
                         hasFigure = false
                     }
                 }
-                if(hasFigure){
+                if (hasFigure) {
                     figure.forEach { shiftCoords ->
-                        state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].collapsingState = PlaygroundBlock.ChangingState(
-                            targetCol = col,
-                            targetRow = row
-                        )
+                        state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].collapsingState =
+                            PlaygroundBlock.ChangingState(
+                                targetCol = col,
+                                targetRow = row
+                            )
                     }
                     state.value.playground.blocks[col][row].collapsingState = PlaygroundBlock.ChangingState(
                         targetCol = col,
@@ -200,26 +208,26 @@ class PlaygroundManager {
         }
 
         // find horizontal pair
-        iterateBlocks {col, row, block ->
-            if(
-                blockExists(col - 1, row )
-                && state.value.playground.blocks[col-1][row].power == block.power
-                && state.value.playground.blocks[col-1][row].collapsingState == null
+        state.value.playground.iterateBlocks { col, row, block ->
+            if (
+                blockExists(col - 1, row)
+                && state.value.playground.blocks[col - 1][row].power == block.power
+                && state.value.playground.blocks[col - 1][row].collapsingState == null
                 && state.value.playground.blocks[col][row].collapsingState == null
             ) {
-                val collapsingState:PlaygroundBlock.ChangingState?
-                if(block.isPrioritizedForCollapsing){
+                val collapsingState: PlaygroundBlock.ChangingState?
+                if (block.isPrioritizedForCollapsing) {
                     collapsingState = PlaygroundBlock.ChangingState(
                         targetRow = row,
                         targetCol = col
                     )
-                } else if(state.value.playground.blocks[col - 1][row].isPrioritizedForCollapsing){
+                } else if (state.value.playground.blocks[col - 1][row].isPrioritizedForCollapsing) {
                     collapsingState = PlaygroundBlock.ChangingState(
                         targetRow = row,
-                        targetCol = col-1
+                        targetCol = col - 1
                     )
                 } else { // If both prioritized -> move to center
-                    if(col <= 2)
+                    if (col <= 2)
                         collapsingState = PlaygroundBlock.ChangingState(
                             targetRow = row,
                             targetCol = col
@@ -227,27 +235,26 @@ class PlaygroundManager {
                     else
                         collapsingState = PlaygroundBlock.ChangingState(
                             targetRow = row,
-                            targetCol = col-1
+                            targetCol = col - 1
                         )
                 }
-                state.value.playground.blocks[col-1][row].collapsingState = collapsingState
+                state.value.playground.blocks[col - 1][row].collapsingState = collapsingState
                 state.value.playground.blocks[col][row].collapsingState = collapsingState
 
             }
         }
 
 
-
         // set target power to block that will be collapsed into
-        iterateBlocks {col, row, block ->
+        state.value.playground.iterateBlocks { col, row, block ->
             block.collapsingState?.let { changingState ->
-                if(changingState.targetCol != col || changingState.targetRow != row)
+                if (changingState.targetCol != col || changingState.targetRow != row)
                     state.value.playground.blocks[changingState.targetCol][changingState.targetRow]
                         .targetPowerShift++
             }
         }
         // set target power to block that will be disappeared
-        iterateBlocks {col, row, block ->
+        state.value.playground.iterateBlocks { col, row, block ->
             block.collapsingState?.let { changingState ->
                 state.value.playground.blocks[col][row].targetPowerShift =
                     state.value
@@ -261,19 +268,19 @@ class PlaygroundManager {
 
     }
 
-    fun preparePlaygroundForMoving(){
+    fun preparePlaygroundForMoving() {
 
-        for (col in 0 until Constants.Playground.COL_COUNT){
+        for (col in 0 until Constants.Playground.COL_COUNT) {
             var shiftValue = 0
             state.value.playground.blocks[col].forEachIndexed { row, block ->
-                if(block.collapsingState !== null &&
+                if (block.collapsingState !== null &&
                     (
                         block.collapsingState?.targetCol != col ||
                             block.collapsingState?.targetRow != row
                         )
                 )
                     shiftValue++
-                else if(shiftValue > 0)
+                else if (shiftValue > 0)
                     state.value.playground.blocks[col][row].movingState = PlaygroundBlock.ChangingState(
                         targetCol = col,
                         targetRow = row - shiftValue
@@ -285,15 +292,13 @@ class PlaygroundManager {
         )
 
 
-
-
     }
 
 
     private fun moveBlocks() {
 
         val newPlayground = Playground()
-        iterateBlocks {col, row, block ->
+        state.value.playground.iterateBlocks { col, row, block ->
             block.collapsingState?.let { collapsingState ->
                 if (
                     collapsingState.targetCol == col &&
@@ -334,7 +339,7 @@ class PlaygroundManager {
         val newPlaygroundBlocksAnimatingState:
             MutableMap<UUID, PlaygroundBlockAnimatingState> = mutableMapOf()
 
-        iterateBlocks {col, row, block ->
+        state.value.playground.iterateBlocks { col, row, block ->
             newPlaygroundBlocksAnimatingState[block.id] = PlaygroundBlockAnimatingState(
                 animatingState = PlayBlockAnimationState.PLACED
             )
@@ -348,13 +353,7 @@ class PlaygroundManager {
 
     }
 
-    fun iterateBlocks(handler:(col: Int, row: Int, block: PlaygroundBlock) -> Unit){
-        for (col in 0 until Constants.Playground.COL_COUNT) {
-            state.value.playground.blocks[col].forEachIndexed {row, block ->
-                handler(col, row, block)
-            }
-        }
-    }
+
     /*
     private fun logPlayground(){
         var log = "  "

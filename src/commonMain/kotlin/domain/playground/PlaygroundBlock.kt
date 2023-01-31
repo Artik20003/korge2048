@@ -1,4 +1,4 @@
-package domain
+package domain.playground
 
 import com.soywiz.korio.util.*
 
@@ -10,7 +10,7 @@ data class PlaygroundBlock(
     var targetPowerShift: Int = 0,
     var isPrioritizedForCollapsing: Boolean = false,
 
-) {
+    ) {
     data class ChangingState (
         val targetCol: Int,
         val targetRow: Int,

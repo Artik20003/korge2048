@@ -1,4 +1,4 @@
-package domain
+package domain.playground
 
 import com.soywiz.korim.color.*
 

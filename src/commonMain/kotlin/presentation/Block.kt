@@ -1,10 +1,8 @@
 package presentation
 
-import Constants
-import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
-import domain.*
+import domain.playground.*
 import kotlin.math.*
 
 fun Container.block(power: Int, cellSize: Double) =

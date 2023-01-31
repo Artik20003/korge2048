@@ -5,22 +5,30 @@ import com.soywiz.korge.scene.*
 import com.soywiz.korge.view.*
 import com.soywiz.korio.util.*
 import domain.*
+import domain.level.*
+import domain.playground.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 
 @OptIn(FlowPreview::class)
-class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
+class PlayScene() : Scene() {
     val cellSize = SizeAdapter.cellSize
-
+    val playgroundManager: PlaygroundManager = PlaygroundManager()
+    val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var blocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
     var playground: Container? = null
+
     override suspend fun SContainer.sceneMain() {
 
         setOnEndAnimationHandlers()
+        playgroundManager.addOnStaticStateListener {
+            levelManager.playground = playgroundManager.state.value.playground
+            levelManager.upgradeLevelIfNeeded()
+        }
 
         //!!TODO launch only if animationState changed
         playgroundManager.state.debounce(20).onEach { state ->
@@ -37,6 +45,11 @@ class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
                 }
             }
 
+        }.launchIn(CoroutineScope(Dispatchers.Default))
+
+        levelManager.state.onEach {
+            println( "Setting new min upcoming value: ${it.level}")
+            playgroundManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
     }
@@ -69,7 +82,7 @@ class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
         blocks = mutableMapOf()
 
         val newPlayground = container {
-            playgroundManager.iterateBlocks { col, row, block ->
+            playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
                 val playgroundBlock = playgroundBlock(
                     col = col,
                     row = row,
@@ -107,7 +120,7 @@ class PlayScene(val playgroundManager: PlaygroundManager) : Scene() {
 
     fun updateUIBlockState () {
 
-        playgroundManager.iterateBlocks { col, row, block ->
+        playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
             blocks[block.id]?.col = col
             blocks[block.id]?.row = row
             blocks[block.id]?.power = block.power

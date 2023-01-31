@@ -5,7 +5,7 @@ import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
 import com.soywiz.korge.view.*
 import com.soywiz.korio.async.*
-import domain.*
+import domain.playground.*
 import kotlinx.coroutines.*
 
 fun Container.playgroundBlock(
