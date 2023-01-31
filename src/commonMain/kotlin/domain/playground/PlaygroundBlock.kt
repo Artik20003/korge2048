@@ -10,15 +10,13 @@ data class PlaygroundBlock(
     var targetPowerShift: Int = 0,
     var isPrioritizedForCollapsing: Boolean = false,
 
-    ) {
-    data class ChangingState (
+) {
+    data class ChangingState(
         val targetCol: Int,
         val targetRow: Int,
     ) {
         override fun toString(): String = "($targetCol, $targetRow)"
     }
     val targetPower: Int?
-        get() = if(targetPowerShift == 0) null else targetPowerShift + power
-
-
+        get() = if (targetPowerShift == 0) null else targetPowerShift + power
 }

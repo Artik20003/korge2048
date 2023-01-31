@@ -8,7 +8,6 @@ import com.soywiz.korio.async.*
 import domain.playground.*
 import kotlinx.coroutines.*
 import presentation.adapters.*
-import kotlin.math.*
 
 fun Container.playgroundBlock(
     col: Int,
@@ -60,32 +59,31 @@ class UIPlaygroundBlock(
         )
 
         container {
-            block(power=power, cellSize = blockSize)
-            //text(animationState.toString())
+            block(power = power, cellSize = blockSize)
+            // text(animationState.toString())
         }
 
-        if(animationState == PlayBlockAnimationState.BOTTOM) {
-            launchImmediately( Dispatchers.Default) {
-               animate {
-                   parallel {
-                       moveTo(
-                           view = playgroundBlock,
-                           x = getXPosition(PlayBlockAnimationState.PLACED),
-                           y = getYPosition(PlayBlockAnimationState.PLACED),
-                           time = TimeSpan(Constants.Playground.ANIMATION_TIME)
-                       )
-
-                   }
-                   block {
-                       onNewBlockAnimationFinished()
-                   }
-               }
+        if (animationState == PlayBlockAnimationState.BOTTOM) {
+            launchImmediately(Dispatchers.Default) {
+                animate {
+                    parallel {
+                        moveTo(
+                            view = playgroundBlock,
+                            x = getXPosition(PlayBlockAnimationState.PLACED),
+                            y = getYPosition(PlayBlockAnimationState.PLACED),
+                            time = TimeSpan(Constants.Playground.ANIMATION_TIME)
+                        )
+                    }
+                    block {
+                        onNewBlockAnimationFinished()
+                    }
+                }
             }
         }
     }
 
-    private fun getYPosition(animationState: PlayBlockAnimationState): Double{
-        return when(animationState) {
+    private fun getYPosition(animationState: PlayBlockAnimationState): Double {
+        return when (animationState) {
             PlayBlockAnimationState.BOTTOM -> Constants.Playground.ROW_COUNT * blockSize
             PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetRow ?: row) * blockSize
             PlayBlockAnimationState.MOVED -> {
@@ -97,9 +95,9 @@ class UIPlaygroundBlock(
     }
 
     private fun getXPosition(animationState: PlayBlockAnimationState): Double {
-        return when(animationState){
-            PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetCol ?: col)  * blockSize
-            PlayBlockAnimationState.MOVED -> (movingState?.targetCol ?: col)  * blockSize
+        return when (animationState) {
+            PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetCol ?: col) * blockSize
+            PlayBlockAnimationState.MOVED -> (movingState?.targetCol ?: col) * blockSize
             else -> col * blockSize
         }
     }
@@ -110,7 +108,7 @@ class UIPlaygroundBlock(
             block(power = targetPower ?: power, cellSize = blockSize)
             val blockToVanish = block(power, cellSize = blockSize)
 
-            launchImmediately( Dispatchers.Default) {
+            launchImmediately(Dispatchers.Default) {
                 animate {
                     parallel {
                         moveTo(
@@ -125,7 +123,7 @@ class UIPlaygroundBlock(
                         )
                     }
                     block {
-                        if(col != it.targetCol || row != it.targetRow){
+                        if (col != it.targetCol || row != it.targetRow) {
                             playgroundBlock.removeFromParent()
                         }
                         onCollapseBlockAnimationFinished()
@@ -137,7 +135,7 @@ class UIPlaygroundBlock(
 
     fun moveIfNeeded() {
         movingState?.let {
-            launchImmediately( Dispatchers.Default) {
+            launchImmediately(Dispatchers.Default) {
                 animate {
                     parallel {
                         moveTo(
@@ -155,5 +153,3 @@ class UIPlaygroundBlock(
         }
     }
 }
-
-

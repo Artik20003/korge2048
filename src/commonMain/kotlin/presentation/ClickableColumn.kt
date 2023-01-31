@@ -4,8 +4,6 @@ import Constants
 import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
-import domain.*
-import kotlin.math.*
 
 fun Container.clickableColumn(onClick: () -> Unit) = ClickableColumn(onClick).addTo(this)
 
@@ -15,7 +13,7 @@ class ClickableColumn(onClick: () -> Unit) : Container() {
         solidRect(
             width = cellSize,
             height = cellSize * Constants.Playground.ROW_COUNT,
-            color = RGBA.Companion.float(0.0,0.0,0.0,0)
+            color = RGBA.Companion.float(0.0, 0.0, 0.0, 0.0)
         ) {
             onClick {
                 onClick()
@@ -23,5 +21,3 @@ class ClickableColumn(onClick: () -> Unit) : Container() {
         }
     }
 }
-
-

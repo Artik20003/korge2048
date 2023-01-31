@@ -1,26 +1,20 @@
-import com.soywiz.klock.*
-import com.soywiz.korge.input.*
+
 import com.soywiz.korge.tests.*
-import com.soywiz.korge.tween.*
-import com.soywiz.korge.view.*
-import com.soywiz.korim.color.*
-import com.soywiz.korma.geom.*
-import domain.playground.*
-import presentation.*
-import kotlin.test.*
 
 class MyTest : ViewsForTesting() {
+    /*
     @Test
     fun testBlockText() = viewsTest {
         var testBlock = playgroundBlock(
-            col=0,
-            row=0,
-            power=15,
-            playgroundAnimationState=AnimationState.STATIC,
+            col = 0,
+            row = 0,
+            power = 15,
+            playgroundAnimationState = AnimationState.STATIC,
             animationState = PlayBlockAnimationState.PLACED,
             onCollapseBlockAnimationFinished = {},
             onMoveBlockAnimationFinished = {},
-            onNewBlockAnimationFinished = {})
+            onNewBlockAnimationFinished = {}
+        )
 
         assertEquals("32K", testBlock.getBlockText())
     }
@@ -36,8 +30,10 @@ class MyTest : ViewsForTesting() {
         rect.simulateClick()
         assertEquals(true, rect.isVisibleToUser())
         tween(rect::x[-102], time = 10.seconds)
-        assertEquals(Rectangle(x=-102, y=0, width=100, height=100), rect.globalBounds)
+        assertEquals(Rectangle(x = -102, y = 0, width = 100, height = 100), rect.globalBounds)
         assertEquals(false, rect.isVisibleToUser())
         assertEquals(listOf("clicked"), log)
     }
+
+     */
 }

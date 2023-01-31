@@ -13,9 +13,9 @@ object BlockTextAdapter {
         val m = powerString.length % 3
         val kTimes = ((powerString.length + (3 - m) % 3) / 3) - 1
 
-        var resSymbol: String = if (kTimes == 1) "K" else (kTimes + 63).toChar().toString()
+        val resSymbol: String = if (kTimes == 1) "K" else (kTimes + 63).toChar().toString()
 
-        powerString = powerString.substring(0, powerString.length - 3 *kTimes) + resSymbol
+        powerString = powerString.substring(0, powerString.length - 3 * kTimes) + resSymbol
 
         return powerString
     }

@@ -22,8 +22,4 @@ class Block(
             centerBetween(0.0, 0.0, cellSize, cellSize)
         }
     }
-
-
 }
-
-

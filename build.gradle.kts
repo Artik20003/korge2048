@@ -11,30 +11,40 @@ repositories {
 }
 
 korge {
-	id = "com.sample.demo"
+    id = "com.sample.demo"
 
 // To enable all targets at once
 
-	targetAll()
+    targetAll()
 
 // To enable targets based on properties/environment variables
-	//targetDefault()
+    // targetDefault()
 
 // To selectively enable targets
 	
-	//targetJvm()
-	//targetJs()
-	//targetDesktop()
-	//targetIos()
-	//targetAndroidIndirect() // targetAndroidDirect()
+    // targetJvm()
+    // targetJs()
+    // targetDesktop()
+    // targetIos()
+    // targetAndroidIndirect() // targetAndroidDirect()
 
-	//serializationJson()
-	//targetAndroidDirect()
+    // serializationJson()
+    // targetAndroidDirect()
 }
+ktlint {
+    disabledRules.value(listOf("no-wildcard-imports", "no-unused-imports"))
+    ignoreFailures.set(false)
+    android.set(true)
+    // "no-wildcard-imports"
 
+    filter {
+        exclude("bootstrap.kt")
+        // include("/src/**")
+    }
+}
+tasks.getByPath("runJvm").dependsOn("ktlintFormat")
 
 dependencies {
     add("commonMainApi", project(":deps"))
-    //add("commonMainApi", project(":korge-dragonbones"))
+    // add("commonMainApi", project(":korge-dragonbones"))
 }
-

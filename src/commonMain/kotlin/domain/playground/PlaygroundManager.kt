@@ -2,10 +2,9 @@ package domain.playground
 
 import Constants
 import com.soywiz.korio.util.*
-import domain.playground.AnimationState.*
-import kotlinx.coroutines.flow.*
 import kotlin.collections.set
 import kotlin.random.*
+import kotlinx.coroutines.flow.*
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -29,12 +28,11 @@ class PlaygroundManager {
         collapsedHanlderList.forEach { it() }
     }
 
-
     fun launchOnStaticStateHandlers() {
         staticHandlerList.forEach { it() }
     }
 
-    fun setMinUpcomingValue(value: Int){
+    fun setMinUpcomingValue(value: Int) {
         state.value = state.value.copy(upcomingMin = value)
     }
     private fun generateUpcomingValues() {
@@ -60,12 +58,12 @@ class PlaygroundManager {
         if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
         if (state.value.playground.blocks[column].size >= Constants.Playground.ROW_COUNT) return
-        if (state.value.animationState != STATIC) return
+        if (state.value.animationState != AnimationState.STATIC) return
 
-        //start animation
+        // start animation
         state.value = state.value.copy(
             lastAddedColumn = column,
-            animationState = NEW_BLOCK_PLACING,
+            animationState = AnimationState.NEW_BLOCK_PLACING,
         )
 
         val newPlaygroundBlock = PlaygroundBlock(
@@ -84,43 +82,39 @@ class PlaygroundManager {
                 )
             )
 
-
         state.value = state.value.copy(
             playground = state.value.playground
         )
         generateUpcomingValues()
         preparePlaygroundForCollapsing()
 
-        //updatePlaygroundAnimationState()
-
-
+        // updatePlaygroundAnimationState()
     }
-
 
     fun setAnimationState(animationState: AnimationState) {
         when (animationState) {
-            BLOCKS_COLLAPSING -> {
+            AnimationState.BLOCKS_COLLAPSING -> {
                 // if nothing to collapse set STATIC animation state.value
                 if (!state.value.hasBlocksToCollapse) {
-                    setAnimationState(STATIC)
+                    setAnimationState(AnimationState.STATIC)
                     return
                 }
                 launchOnCollapsedStateHandlers()
             }
 
-            BLOCKS_MOVING -> {
+            AnimationState.BLOCKS_MOVING -> {
                 preparePlaygroundForMoving()
                 if (!state.value.hasBlocksToMove) {
-                    setAnimationState(STATIC)
+                    setAnimationState(AnimationState.STATIC)
                     return
                 }
             }
 
-            STATIC -> {
+            AnimationState.STATIC -> {
                 moveBlocks()
                 preparePlaygroundForCollapsing()
                 if (state.value.hasBlocksToCollapse) {
-                    setAnimationState(BLOCKS_COLLAPSING)
+                    setAnimationState(AnimationState.BLOCKS_COLLAPSING)
                     return
                 }
                 launchOnStaticStateHandlers()
@@ -130,8 +124,6 @@ class PlaygroundManager {
         }
 
         state.value = state.value.copy(animationState = animationState)
-
-
     }
 
     private fun blockExists(column: Int, row: Int): Boolean =
@@ -142,8 +134,8 @@ class PlaygroundManager {
         // all the figures except horizontal pair. In horizontal pair we need to know where to collapse
         val figures = listOf(
             // the order is critical. From biggest to smallest
-            //_*_
-            //*@*
+            // _*_
+            // *@*
             listOf(
                 Pair(0, -1),
                 Pair(1, 0),
@@ -178,8 +170,8 @@ class PlaygroundManager {
                 Pair(0, -1),
                 Pair(-1, 0)
             ),
-            //@
-            //*
+            // @
+            // *
             listOf(
                 Pair(0, 1)
             )
@@ -193,10 +185,10 @@ class PlaygroundManager {
                 figure.forEach { shiftCoords ->
                     if (
                         !(
-                            blockExists(col + shiftCoords.first, row + shiftCoords.second)
-                                && state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].power ==
-                                block.power
-                                && state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].collapsingState == null
+                            blockExists(col + shiftCoords.first, row + shiftCoords.second) &&
+                                state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].power ==
+                                block.power &&
+                                state.value.playground.blocks[col + shiftCoords.first][row + shiftCoords.second].collapsingState == null
                             )
                     ) {
                         hasFigure = false
@@ -221,10 +213,10 @@ class PlaygroundManager {
         // find horizontal pair
         state.value.playground.iterateBlocks { col, row, block ->
             if (
-                blockExists(col - 1, row)
-                && state.value.playground.blocks[col - 1][row].power == block.power
-                && state.value.playground.blocks[col - 1][row].collapsingState == null
-                && state.value.playground.blocks[col][row].collapsingState == null
+                blockExists(col - 1, row) &&
+                state.value.playground.blocks[col - 1][row].power == block.power &&
+                state.value.playground.blocks[col - 1][row].collapsingState == null &&
+                state.value.playground.blocks[col][row].collapsingState == null
             ) {
                 val collapsingState: PlaygroundBlock.ChangingState?
                 if (block.isPrioritizedForCollapsing) {
@@ -251,10 +243,8 @@ class PlaygroundManager {
                 }
                 state.value.playground.blocks[col - 1][row].collapsingState = collapsingState
                 state.value.playground.blocks[col][row].collapsingState = collapsingState
-
             }
         }
-
 
         // set target power to block that will be collapsed into
         state.value.playground.iterateBlocks { col, row, block ->
@@ -276,7 +266,6 @@ class PlaygroundManager {
         state.value = state.value.copy(
             playground = state.value.playground,
         )
-
     }
 
     fun preparePlaygroundForMoving() {
@@ -301,10 +290,7 @@ class PlaygroundManager {
         state.value = state.value.copy(
             playground = state.value.playground,
         )
-
-
     }
-
 
     private fun moveBlocks() {
 
@@ -317,7 +303,7 @@ class PlaygroundManager {
                 ) {
 
                     newPlayground.blocks[col].add(
-                        //block.movingState?.targetRow ?: row,
+                        // block.movingState?.targetRow ?: row,
                         PlaygroundBlock(
                             id = block.id,
                             power = block.targetPower ?: block.power,
@@ -329,7 +315,7 @@ class PlaygroundManager {
             }
             block.movingState?.let { movingState ->
                 newPlayground.blocks[movingState.targetCol].add(
-                    //movingState.targetRow,
+                    // movingState.targetRow,
                     PlaygroundBlock(
                         id = block.id,
                         power = block.power,
@@ -344,7 +330,6 @@ class PlaygroundManager {
                     power = block.power
                 )
             )
-
         }
 
         val newPlaygroundBlocksAnimatingState:
@@ -356,14 +341,11 @@ class PlaygroundManager {
             )
         }
 
-
         state.value = state.value.copy(
             playground = newPlayground,
             playgroundBlocksAnimatingState = newPlaygroundBlocksAnimatingState,
         )
-
     }
-
 
     /*
     private fun logPlayground(){
@@ -389,6 +371,4 @@ class PlaygroundManager {
         println(log)
     }
      */
-
-
 }

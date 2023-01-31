@@ -23,7 +23,6 @@ class LevelManager(var playground: Playground) {
         return isIncrementLevelNeeded
     }
 
-
     fun upgradeLevelIfNeeded() {
         // debug
         playground.iterateBlocks { col, row, block ->
@@ -32,7 +31,6 @@ class LevelManager(var playground: Playground) {
         println("==")
 
         // end  debug
-
 
         if (isIncrementLevelNeeded()) {
             var maxPower = 1

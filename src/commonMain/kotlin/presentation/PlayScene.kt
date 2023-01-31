@@ -12,7 +12,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import presentation.adapters.*
 
-
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
     val cellSize = CellSizeAdapter.cellSize
@@ -38,7 +37,7 @@ class PlayScene() : Scene() {
             scoreManager.UpdateScore()
         }
 
-        //!!TODO launch only if animationState changed
+        // !!TODO launch only if animationState changed
         playgroundManager.state.debounce(20).onEach { state ->
 
             updateUIBlockState()
@@ -52,49 +51,46 @@ class PlayScene() : Scene() {
                     blocks.forEach { it.value.moveIfNeeded() }
                 }
             }
-
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         levelManager.state.onEach {
-            println( "Setting new min upcoming value: ${it.level}")
+            println("Setting new min upcoming value: ${it.level}")
             playgroundManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
-
         // UI score
-        text(scoreManager.state.value.score.toString(), textSize = 16.0){
+        text(scoreManager.state.value.score.toString(), textSize = 16.0) {
             scoreManager.state.onEach {
                 text = it.score.toString()
             }.launchIn(CoroutineScope(Dispatchers.Default))
         }
-
     }
 
     private fun setOnEndAnimationHandlers() {
 
         onNewBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
-            if(flag){
+            if (flag) {
                 playgroundManager.setAnimationState(AnimationState.BLOCKS_COLLAPSING)
                 onNewBlockAnimationFinishedFlag.value = false
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         onCollapseBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
-            if(flag){
+            if (flag) {
                 playgroundManager.setAnimationState(AnimationState.BLOCKS_MOVING)
                 onCollapseBlockAnimationFinishedFlag.value = false
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         onMoveBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
-            if(flag){
+            if (flag) {
                 playgroundManager.setAnimationState(AnimationState.STATIC)
                 onMoveBlockAnimationFinishedFlag.value = false
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
-    fun SContainer.redrawPlayground(){
+    fun SContainer.redrawPlayground() {
         blocks = mutableMapOf()
 
         val newPlayground = container {
@@ -124,24 +120,23 @@ class PlayScene() : Scene() {
                     playgroundManager.push(colNum)
                 }
             )
-            .position(
-                x = (colNum * cellSize).toInt(),
-                y = 0
-            )
+                .position(
+                    x = (colNum * cellSize).toInt(),
+                    y = 0
+                )
         }
 
-        text(playgroundManager.state.value.animationState.toString()).position(0, (cellSize* Constants.Playground.ROW_COUNT + 2).toInt())
-
+        text(playgroundManager.state.value.animationState.toString()).position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
     }
 
-    fun updateUIBlockState () {
+    fun updateUIBlockState() {
 
         playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
             blocks[block.id]?.col = col
             blocks[block.id]?.row = row
             blocks[block.id]?.power = block.power
             blocks[block.id]?.animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
-                    .animatingState
+                .animatingState
             blocks[block.id]?.targetPower = block.targetPower
             blocks[block.id]?.collapsingState = block.collapsingState
             blocks[block.id]?.movingState = block.movingState
@@ -149,12 +144,6 @@ class PlayScene() : Scene() {
             blocks[block.id]?.onNewBlockAnimationFinished = { onNewBlockAnimationFinishedFlag.value = true }
             blocks[block.id]?.onCollapseBlockAnimationFinished = { onCollapseBlockAnimationFinishedFlag.value = true }
             blocks[block.id]?.onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true }
-
         }
     }
-
-
-
-
-
 }
