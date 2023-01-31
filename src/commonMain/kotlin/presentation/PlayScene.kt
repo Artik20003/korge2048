@@ -7,6 +7,7 @@ import com.soywiz.korio.util.*
 import domain.*
 import domain.level.*
 import domain.playground.*
+import domain.score.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -16,6 +17,7 @@ class PlayScene() : Scene() {
     val cellSize = SizeAdapter.cellSize
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
+    val scoreManager: ScoreManager = ScoreManager(playgroundManager.state.value.playground)
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -28,6 +30,11 @@ class PlayScene() : Scene() {
         playgroundManager.addOnStaticStateListener {
             levelManager.playground = playgroundManager.state.value.playground
             levelManager.upgradeLevelIfNeeded()
+        }
+
+        playgroundManager.addOnCollapsedStateListener {
+            scoreManager.playground = playgroundManager.state.value.playground
+            scoreManager.UpdateScore()
         }
 
         //!!TODO launch only if animationState changed
@@ -50,6 +57,11 @@ class PlayScene() : Scene() {
         levelManager.state.onEach {
             println( "Setting new min upcoming value: ${it.level}")
             playgroundManager.setMinUpcomingValue(it.level)
+        }.launchIn(CoroutineScope(Dispatchers.Default))
+
+        scoreManager.state.onEach {
+            println("Updating score: ${it.score}")
+            redrawScore(it.score)
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
     }
@@ -137,5 +149,8 @@ class PlayScene() : Scene() {
         }
     }
 
+    fun SContainer.redrawScore(score: Int) {
+        text(score.toString(), textSize = 16.0).position((cellSize * (Constants.Playground.COL_COUNT - 2)).toInt(),(cellSize* Constants.Playground.ROW_COUNT + 2).toInt())
+    }
 
 }
