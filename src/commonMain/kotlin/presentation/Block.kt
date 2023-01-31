@@ -18,7 +18,7 @@ class Block(
 
     init {
         roundRect(cellSize, cellSize, 5.0, fill = PlayBlockColor.getColorByPower(power))
-        text(2.0.pow(power).toLong().toString(), 25.0, Colors.WHITE).apply {
+        text(BlockTextAdapter.getTextByPower(power), BlockTextAdapter.getFontSizeByPower(power), Colors.WHITE).apply {
             centerBetween(0.0, 0.0, cellSize, cellSize)
         }
     }

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.*
 
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
-    val cellSize = SizeAdapter.cellSize
+    val cellSize = СellSizeAdapter.cellSize
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     val scoreManager: ScoreManager = ScoreManager(playgroundManager.state.value.playground)
