@@ -1,9 +1,9 @@
 
 import com.soywiz.korge.tests.*
 import domain.playground.*
+import kotlin.test.*
 import presentation.*
 import presentation.adapters.*
-import kotlin.test.*
 
 class MyTest : ViewsForTesting() {
 

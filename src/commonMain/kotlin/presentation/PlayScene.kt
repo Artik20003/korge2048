@@ -126,7 +126,8 @@ class PlayScene() : Scene() {
                 )
         }
 
-        text(playgroundManager.state.value.animationState.toString()).position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
+        text(playgroundManager.state.value.animationState.toString())
+            .position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
     }
 
     fun updateUIBlockState() {

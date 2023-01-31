@@ -35,6 +35,7 @@ ktlint {
     disabledRules.value(listOf("no-wildcard-imports", "no-unused-imports"))
     ignoreFailures.set(false)
     android.set(true)
+
     // "no-wildcard-imports"
 
     filter {
