@@ -344,7 +344,7 @@ class PlaygroundManager {
         val newPlaygroundBlocksAnimatingState:
             MutableMap<UUID, PlaygroundBlockAnimatingState> = mutableMapOf()
 
-        state.value.playground.iterateBlocks { col, row, block ->
+        state.value.playground.iterateBlocks { _, _, block ->
             newPlaygroundBlocksAnimatingState[block.id] = PlaygroundBlockAnimatingState(
                 animatingState = PlayBlockAnimationState.PLACED
             )

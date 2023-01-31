@@ -1,11 +1,15 @@
 
 import com.soywiz.korge.tests.*
+import domain.playground.*
+import presentation.*
+import presentation.adapters.*
+import kotlin.test.*
 
 class MyTest : ViewsForTesting() {
-    /*
+
     @Test
     fun testBlockText() = viewsTest {
-        var testBlock = playgroundBlock(
+        val testBlock = playgroundBlock(
             col = 0,
             row = 0,
             power = 15,
@@ -16,9 +20,10 @@ class MyTest : ViewsForTesting() {
             onNewBlockAnimationFinished = {}
         )
 
-        assertEquals("32K", testBlock.getBlockText())
+        assertEquals("32K", BlockTextAdapter.getTextByPower(testBlock.power))
     }
 
+    /*
     @Test
     fun test() = viewsTest {
         val log = arrayListOf<String>()
