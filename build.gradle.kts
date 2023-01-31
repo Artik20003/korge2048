@@ -1,7 +1,13 @@
 import com.soywiz.korge.gradle.*
 
 plugins {
-	alias(libs.plugins.korge)
+    id("org.jlleitschuh.gradle.ktlint") version "11.1.0"
+    alias(libs.plugins.korge)
+}
+
+repositories {
+    // Required to download KtLint
+    mavenCentral()
 }
 
 korge {

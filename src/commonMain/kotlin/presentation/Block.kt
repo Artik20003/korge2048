@@ -3,7 +3,7 @@ package presentation
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import domain.playground.*
-import kotlin.math.*
+import presentation.adapters.*
 
 fun Container.block(power: Int, cellSize: Double) =
     Block(

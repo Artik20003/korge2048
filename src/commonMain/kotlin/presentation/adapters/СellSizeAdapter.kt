@@ -1,6 +1,6 @@
-package presentation
+package presentation.adapters
 
-object СellSizeAdapter {
+object CellSizeAdapter {
     val cellSize: Double
         get() {
             return 50.0
