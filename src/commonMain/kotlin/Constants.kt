@@ -6,4 +6,8 @@ object Constants {
         const val COL_COUNT = 5
         const val ANIMATION_TIME = 500.0
     }
+    object UI {
+        const val WIDTH = 640
+        const val HEIGHT = 1280
+    }
 }

@@ -17,8 +17,14 @@ class Block(
 ) : Container() {
 
     init {
-        roundRect(cellSize, cellSize, 5.0, fill = PlayBlockColor.getColorByPower(power))
-        text(BlockTextAdapter.getTextByPower(power), BlockTextAdapter.getFontSizeByPower(power), Colors.WHITE).apply {
+
+        roundRect(cellSize, cellSize, CellSizeAdapter.cellSize * .17, fill = PlayBlockColor.getColorByPower(power))
+        text(
+            text = BlockTextAdapter.getTextByPower(power),
+            textSize = BlockTextAdapter.getFontSizeByPower(power),
+            fill = Colors.WHITE,
+            font = DefaultFontFamily.font
+        ).apply {
             centerBetween(0.0, 0.0, cellSize, cellSize)
         }
     }

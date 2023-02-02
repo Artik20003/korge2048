@@ -21,6 +21,6 @@ object BlockTextAdapter {
     }
 
     fun getFontSizeByPower(power: Int): Double {
-        return 25.0
+        return 60.0
     }
 }

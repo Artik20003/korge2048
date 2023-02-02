@@ -3,6 +3,10 @@ package presentation
 import Constants
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.view.*
+import com.soywiz.korim.color.*
+import com.soywiz.korim.font.*
+import com.soywiz.korio.file.std.*
+import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
 import domain.*
 import domain.level.*
@@ -91,9 +95,15 @@ class PlayScene() : Scene() {
     }
 
     fun SContainer.redrawPlayground() {
-        blocks = mutableMapOf()
+        size(
+            width = Constants.Playground.COL_COUNT * CellSizeAdapter.cellSize,
+            height = Constants.Playground.ROW_COUNT * CellSizeAdapter.cellSize
+        )
+        centerXOnStage()
 
+        blocks = mutableMapOf()
         val newPlayground = container {
+
             playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
                 val playgroundBlock = playgroundBlock(
                     col = col,

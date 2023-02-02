@@ -14,7 +14,7 @@ class LevelManager(var playground: Playground) {
 
     private fun isIncrementLevelNeeded(): Boolean {
         var isIncrementLevelNeeded = false
-        playground.iterateBlocks { col, row, block ->
+        playground.iterateBlocks { _, _, block ->
             if (block.power >= state.value.level + Constants.Playground.NEXT_LEVEL_SPREAD) {
                 isIncrementLevelNeeded = true
                 return@iterateBlocks

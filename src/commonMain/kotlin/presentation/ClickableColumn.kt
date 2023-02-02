@@ -4,11 +4,12 @@ import Constants
 import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
+import presentation.adapters.*
 
 fun Container.clickableColumn(onClick: () -> Unit) = ClickableColumn(onClick).addTo(this)
 
 class ClickableColumn(onClick: () -> Unit) : Container() {
-    val cellSize: Double = 50.0
+    val cellSize: Double = CellSizeAdapter.cellSize
     init {
         solidRect(
             width = cellSize,
