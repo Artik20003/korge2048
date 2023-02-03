@@ -2,6 +2,7 @@ package presentation
 
 import Constants
 import com.soywiz.korge.scene.*
+import com.soywiz.korge.service.storage.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
@@ -9,6 +10,7 @@ import com.soywiz.korim.text.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
+import data.DefaultStorage
 import domain.*
 import domain.level.*
 import domain.playground.*
@@ -22,7 +24,9 @@ class PlayScene() : Scene() {
     val cellSize = CellSizeAdapter.cellSize
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
-    val scoreManager: ScoreManager = ScoreManager(playgroundManager.state.value.playground)
+    val scoreManager: ScoreManager = ScoreManager(
+        playgroundManager.state.value.playground, DefaultStorage.storage
+    )
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -56,7 +60,7 @@ class PlayScene() : Scene() {
 
         playgroundManager.addOnCollapsedStateListener {
             scoreManager.playground = playgroundManager.state.value.playground
-            scoreManager.UpdateScore()
+            scoreManager.updateScore()
         }
 
         // !!TODO launch only if animationState changed
