@@ -5,6 +5,7 @@ import com.soywiz.korge.scene.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
+import com.soywiz.korim.text.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
@@ -27,8 +28,26 @@ class PlayScene() : Scene() {
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var blocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
     var playground: Container? = null
+    var topBar: Container? = null
 
     override suspend fun SContainer.sceneMain() {
+
+        topBar = fixedSizeContainer(
+            width = Constants.UI.WIDTH,
+            height = 100,
+        ) {
+            text(
+                // text = scoreManager.state.value.score.toString(),
+                text = "1 000",
+                textSize = 60.0,
+                font = DefaultFontFamily.font,
+            ) {
+                scoreManager.state.onEach {
+                    text = it.score.toString()
+                    centerOn(this.parent ?: this.containerRoot)
+                }.launchIn(CoroutineScope(Dispatchers.Default))
+            }
+        }
 
         setOnEndAnimationHandlers()
         playgroundManager.addOnStaticStateListener {
@@ -61,13 +80,6 @@ class PlayScene() : Scene() {
             println("Setting new min upcoming value: ${it.level}")
             playgroundManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
-
-        // UI score
-        text(scoreManager.state.value.score.toString(), textSize = 16.0) {
-            scoreManager.state.onEach {
-                text = it.score.toString()
-            }.launchIn(CoroutineScope(Dispatchers.Default))
-        }
     }
 
     private fun setOnEndAnimationHandlers() {
@@ -95,15 +107,11 @@ class PlayScene() : Scene() {
     }
 
     fun SContainer.redrawPlayground() {
-        size(
-            width = Constants.Playground.COL_COUNT * CellSizeAdapter.cellSize,
-            height = Constants.Playground.ROW_COUNT * CellSizeAdapter.cellSize
-        )
-        centerXOnStage()
 
         blocks = mutableMapOf()
         val newPlayground = container {
-
+            alignTopToBottomOf(topBar ?: containerRoot)
+            this.positionX((Constants.UI.WIDTH - CellSizeAdapter.cellSize * Constants.Playground.COL_COUNT) / 2)
             playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
                 val playgroundBlock = playgroundBlock(
                     col = col,
@@ -121,23 +129,22 @@ class PlayScene() : Scene() {
                 )
                 blocks[block.id] = playgroundBlock
             }
+            for (colNum in 0 until Constants.Playground.COL_COUNT) {
+                clickableColumn(
+                    onClick = {
+                        playgroundManager.push(colNum)
+                    }
+                )
+                    .position(
+                        x = (colNum * cellSize).toInt(),
+                        y = 0
+                    )
+            }
+            text(playgroundManager.state.value.animationState.toString())
+                .position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
         }
         playground?.removeFromParent()
         playground = newPlayground
-        for (colNum in 0 until Constants.Playground.COL_COUNT) {
-            clickableColumn(
-                onClick = {
-                    playgroundManager.push(colNum)
-                }
-            )
-                .position(
-                    x = (colNum * cellSize).toInt(),
-                    y = 0
-                )
-        }
-
-        text(playgroundManager.state.value.animationState.toString())
-            .position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
     }
 
     fun updateUIBlockState() {
