@@ -31,7 +31,6 @@ class ScoreManager(
     private fun updateBestScoreIfPossible(score: Int) {
         if (score > getBestScore()) {
             setBestScore(score)
-            storeBestScore(score)
         }
     }
 
