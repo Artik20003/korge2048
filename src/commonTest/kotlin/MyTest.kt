@@ -1,26 +1,18 @@
 
 import com.soywiz.korge.tests.*
-import domain.playground.*
 import kotlin.test.*
-import presentation.*
 import presentation.adapters.*
 
 class MyTest : ViewsForTesting() {
 
     @Test
     fun testBlockText() = viewsTest {
-        val testBlock = playgroundBlock(
-            col = 0,
-            row = 0,
-            power = 15,
-            playgroundAnimationState = AnimationState.STATIC,
-            animationState = PlayBlockAnimationState.PLACED,
-            onCollapseBlockAnimationFinished = {},
-            onMoveBlockAnimationFinished = {},
-            onNewBlockAnimationFinished = {}
-        )
 
-        assertEquals("32K", BlockTextAdapter.getTextByPower(testBlock.power))
+        for (i in 1..100) {
+            println("$i: ${BlockTextAdapter.getTextByPower(i)}")
+        }
+
+        assertEquals("32K", BlockTextAdapter.getTextByPower(15))
     }
 
     /*
