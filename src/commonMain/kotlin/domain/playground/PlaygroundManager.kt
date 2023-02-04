@@ -2,7 +2,6 @@ package domain.playground
 import Constants
 import com.soywiz.korio.util.*
 import kotlin.collections.set
-import kotlin.random.*
 import kotlinx.coroutines.flow.*
 
 class PlaygroundManager {
@@ -10,10 +9,6 @@ class PlaygroundManager {
         private set
     private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
     private var collapsedHanlderList: MutableList<() -> Unit> = mutableListOf()
-
-    init {
-        generateUpcomingValues()
-    }
 
     fun addOnStaticStateListener(handler: () -> Unit) {
         staticHandlerList.add(handler)
@@ -31,28 +26,7 @@ class PlaygroundManager {
         staticHandlerList.forEach { it() }
     }
 
-    fun setMinUpcomingValue(value: Int) {
-        state.value = state.value.copy(upcomingMin = value)
-    }
-    private fun generateUpcomingValues() {
-        state.update {
-            if (state.value.upcomingValues.isEmpty()) {
-                it.copy(
-                    upcomingValues = listOf(getGeneratedValue(), getGeneratedValue())
-                )
-            } else {
-                it.copy(
-                    upcomingValues = listOf(it.upcomingValues[1], getGeneratedValue())
-                )
-            }
-        }
-    }
-
-    private fun getGeneratedValue(): Int {
-        return Random(3).nextInt(state.value.upcomingMin, state.value.upcomingMax)
-    }
-
-    fun push(column: Int) {
+    fun push(column: Int, power: Int) {
 
         if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
@@ -66,7 +40,7 @@ class PlaygroundManager {
         )
 
         val newPlaygroundBlock = PlaygroundBlock(
-            power = state.value.upcomingValues[0],
+            power = power,
             isPrioritizedForCollapsing = true
         )
         state.value.playground.blocks[column].add(
@@ -84,7 +58,6 @@ class PlaygroundManager {
         state.value = state.value.copy(
             playground = state.value.playground
         )
-        generateUpcomingValues()
         preparePlaygroundForCollapsing()
 
         // updatePlaygroundAnimationState()

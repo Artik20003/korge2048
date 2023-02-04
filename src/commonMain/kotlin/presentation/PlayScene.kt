@@ -19,6 +19,7 @@ import domain.*
 import domain.level.*
 import domain.playground.*
 import domain.score.*
+import domain.upcoming.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import presentation.adapters.*
@@ -31,6 +32,7 @@ class PlayScene() : Scene() {
     val scoreManager: ScoreManager = ScoreManager(
         playgroundManager.state.value.playground, DefaultStorage.storage
     )
+    val upcomingValuesManager: UpcomingValuesManager = UpcomingValuesManager()
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -87,7 +89,7 @@ class PlayScene() : Scene() {
 
         levelManager.state.onEach {
             println("Setting new min upcoming value: ${it.level}")
-            playgroundManager.setMinUpcomingValue(it.level)
+            upcomingValuesManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
@@ -163,7 +165,7 @@ class PlayScene() : Scene() {
             for (colNum in 0 until Constants.Playground.COL_COUNT) {
                 clickableColumn(
                     onClick = {
-                        playgroundManager.push(colNum)
+                        playgroundManager.push(colNum, upcomingValuesManager.popCurrentUpcomingValue())
                     }
                 )
                     .position(

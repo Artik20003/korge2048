@@ -1,6 +1,4 @@
 package domain.playground
-
-import Constants
 import com.soywiz.korio.util.*
 import kotlin.collections.set
 
@@ -37,17 +35,10 @@ data class PlaygroundState(
     val score: Long = 0,
 
     var playgroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> = emptyMap(),
-
-    val upcomingValues: List<Int> = emptyList(),
-
     val lastAddedColumn: Int? = null,
     val animationState: AnimationState = AnimationState.STATIC,
-    var upcomingMin: Int = 1,
+
 ) {
-
-    val upcomingMax: Int
-        get() = upcomingMin + Constants.Playground.AVAILABLE_GENERATING_SPREAD
-
     val hasBlocksToCollapse: Boolean
         get() =
             playground.blocks.map {
