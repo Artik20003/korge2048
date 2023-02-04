@@ -16,7 +16,17 @@ class UpcomingValuesManager {
         return currentValue
     }
 
-    fun setMinUpcomingValue(value: Int) {
+    fun updateLevelUpcomingValues(level: Int) {
+        setMinUpcomingValue(level)
+        removeUpcomingValues()
+        generateUpcomingValues()
+    }
+
+    private fun removeUpcomingValues() {
+        state.value = state.value.copy(upcomingValues = emptyList())
+    }
+
+    private fun setMinUpcomingValue(value: Int) {
         state.value = state.value.copy(upcomingMin = value)
     }
     private fun getGeneratedValue(): Int {

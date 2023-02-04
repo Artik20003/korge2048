@@ -116,7 +116,7 @@ class PlayScene() : Scene() {
 
         levelManager.state.onEach {
             println("Setting new min upcoming value: ${it.level}")
-            upcomingValuesManager.setMinUpcomingValue(it.level)
+            upcomingValuesManager.updateLevelUpcomingValues(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
