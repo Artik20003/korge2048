@@ -10,6 +10,8 @@ import com.soywiz.korim.font.*
 import com.soywiz.korim.paint.*
 import com.soywiz.korim.text.*
 import com.soywiz.korim.vector.*
+import com.soywiz.korim.vector.format.*
+import com.soywiz.korio.async.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
@@ -41,11 +43,13 @@ class PlayScene() : Scene() {
     var topBar: Container? = null
 
     override suspend fun SContainer.sceneMain() {
-
+        storage["best"] = "0"
         topBar = fixedSizeContainer(
             width = Constants.UI.WIDTH,
             height = 100,
         ) {
+
+            // Current Score
             text(
                 text = scoreManager.state.value.score.toString(),
                 textSize = 60.0,
@@ -56,6 +60,29 @@ class PlayScene() : Scene() {
                     centerOn(this.parent ?: this.containerRoot)
                 }.launchIn(CoroutineScope(Dispatchers.Default))
             }
+        }
+        // Best Score
+        container {
+            val bestScoreContainer = this
+            val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
+                scale = .02
+            }
+
+            text(
+                text = scoreManager.state.value.bestScore.toString(),
+                textSize = 35.0,
+            ) {
+                alignLeftToRightOf(crownIcon, 7.0)
+                positionY(13)
+                scoreManager.state.onEach {
+                    text = it.bestScore.toString()
+                    alignLeftToRightOf(crownIcon, 6.0)
+                    bestScoreContainer.alignRightToRightOf(topBar!!, 15)
+                }.launchIn(CoroutineScope(Dispatchers.Default))
+            }
+
+            alignRightToRightOf(topBar!!, 15)
+            alignTopToTopOf(topBar!!, 5)
         }
 
         drawBgColumns()
