@@ -18,7 +18,7 @@ suspend fun main() = Korge(
     clipBorders = false
 
 ) {
-    DefaultFontFamily.font = TtfFont(resourcesVfs["Itim-Regular.ttf"].readBytes())
+    DefaultFontFamily.font = TtfFont(resourcesVfs["fonts/Itim-Regular.ttf"].readBytes())
     DefaultStorage.storage = views.storage
 
     val sceneContainer = sceneContainer()
