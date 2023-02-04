@@ -1,6 +1,8 @@
 package presentation
 
 import Constants
+import com.soywiz.klock.*
+import com.soywiz.korge.animate.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
 import com.soywiz.korge.view.*
@@ -15,6 +17,7 @@ import com.soywiz.korio.async.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
+import com.soywiz.korma.geom.*
 import com.soywiz.korma.geom.vector.*
 import data.*
 import domain.*
@@ -40,10 +43,12 @@ class PlayScene() : Scene() {
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var blocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
     var playground: Container? = null
+    var playgroundBgColumns: Container? = null
     var topBar: Container? = null
+    var upcomingBlocks: MutableList<Container?> = mutableListOf()
 
     override suspend fun SContainer.sceneMain() {
-        //storage["best"] = "0"
+        // storage["best"] = "0"
         topBar = fixedSizeContainer(
             width = Constants.UI.WIDTH,
             height = 100,
@@ -80,12 +85,11 @@ class PlayScene() : Scene() {
                     bestScoreContainer.alignRightToRightOf(topBar!!, 15)
                 }.launchIn(CoroutineScope(Dispatchers.Default))
             }
-
             alignRightToRightOf(topBar!!, 15)
             alignTopToTopOf(topBar!!, 5)
         }
 
-        drawBgColumns()
+        playgroundBgColumns = drawBgColumns()
 
         setOnEndAnimationHandlers()
         playgroundManager.addOnStaticStateListener {
@@ -118,10 +122,75 @@ class PlayScene() : Scene() {
             println("Setting new min upcoming value: ${it.level}")
             upcomingValuesManager.setMinUpcomingValue(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
+
+        // upcoming values
+        val strokeThickness = SizeAdapter.columnSize * .05
+        val secondScale = 0.75
+        container {
+
+            fun Container.upcomingRect() = RoundRect(
+                width = SizeAdapter.columnSize,
+                height = SizeAdapter.columnSize,
+                rx = SizeAdapter.columnSize * .17,
+                stroke = Colors.WHITE,
+                fill = Colors.TRANSPARENT_WHITE,
+                strokeThickness = strokeThickness
+            ).addTo(this)
+
+            val firstUpcomingValueRect = upcomingRect().also {
+                it.alignTopToBottomOf(playgroundBgColumns!!, 10)
+                it.centerXOn(playgroundBgColumns!!)
+            }
+
+            val secondUpcomingValueRect = upcomingRect().also {
+                it.alignLeftToRightOf(firstUpcomingValueRect, 10).scale(secondScale)
+                it.alignTopToBottomOf(playgroundBgColumns!!, 10)
+            }
+
+            upcomingValuesManager.state.onEach {
+                println(123456)
+                if (upcomingBlocks.isEmpty()) {
+                    upcomingBlocks.add(
+                        block(
+                            power = it.upcomingValues[0],
+                            cellSize = SizeAdapter.cellSize,
+                        ).also {
+                            it.centerOn(firstUpcomingValueRect)
+                        }
+                    )
+                    upcomingBlocks.add(
+                        block(
+                            power = it.upcomingValues[1],
+                            cellSize = SizeAdapter.cellSize,
+                        ).also {
+                            it.also { it.scale(secondScale) }.centerOn(secondUpcomingValueRect)
+                        }
+                    )
+                } else {
+
+                    upcomingBlocks.getOrNull(0)?.let { firstBlock ->
+                        firstBlock.animate {
+                            parallel {
+                                moveTo(
+                                    view = firstBlock,
+                                    x = firstBlock.x,
+                                    y = firstBlock.y - firstBlock.height,
+                                    time = TimeSpan(1000.0)
+                                )
+                                hide(
+                                    view = firstBlock,
+                                    time = TimeSpan(1000.0)
+                                )
+                            }
+                        }
+                    }
+                }
+            }.launchIn(CoroutineScope(Dispatchers.Default))
+        }.positionX(-strokeThickness / 2).alignTopToBottomOf(playgroundBgColumns!!, padding = 30)
     }
 
-    private fun SContainer.drawBgColumns() {
-        container {
+    private fun SContainer.drawBgColumns(): Container {
+        return container {
             alignTopToBottomOf(topBar ?: containerRoot)
             positionX(SizeAdapter.horizontalPlaygroundMarginValue)
 
