@@ -43,7 +43,7 @@ class PlayScene() : Scene() {
     var topBar: Container? = null
 
     override suspend fun SContainer.sceneMain() {
-        //storage["best"] = "0"
+        // storage["best"] = "0"
         topBar = fixedSizeContainer(
             width = Constants.UI.WIDTH,
             height = 100,
