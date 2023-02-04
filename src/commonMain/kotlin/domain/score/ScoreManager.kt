@@ -13,14 +13,26 @@ class ScoreManager(
     var state = MutableStateFlow<ScoreState>(ScoreState())
 
     init {
+        initBestScore()
         updateScore()
     }
 
-    fun getBestScore(): Int {
+    private fun initBestScore() {
+        state.value = state.value.copy(
+            bestScore = getBestScoreFromStorage()
+        )
+    }
+
+    private fun getBestScoreFromStorage(): Int {
         return storage.getOrNull("best")?.toInt() ?: 0
     }
 
+    fun getBestScore(): Int {
+        return state.value.bestScore
+    }
+
     private fun setBestScore(score: Int) {
+        state.value = state.value.copy(bestScore = score)
         storeBestScore(score)
     }
 
@@ -58,7 +70,9 @@ class ScoreManager(
         setScore(state.value.score + scoreSpread)
         updateBestScoreIfPossible(state.value.score)
         println(
-            "Current score: ${getScore()} Best Score: ${getBestScore()} "
+            "Current score: " + "${getScore()} " +
+                "Best Score: " + "${getBestScore()}" +
+                " Storage best score: ${getBestScoreFromStorage()} "
         )
     }
 }
