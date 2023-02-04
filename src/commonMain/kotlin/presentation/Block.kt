@@ -18,7 +18,7 @@ class Block(
 
     init {
 
-        roundRect(cellSize, cellSize, CellSizeAdapter.cellSize * .17, fill = PlayBlockColor.getColorByPower(power))
+        roundRect(cellSize, cellSize, SizeAdapter.cellSize * .17, fill = PlayBlockColor.getColorByPower(power))
         text(
             text = BlockTextAdapter.getTextByPower(power),
             textSize = BlockTextAdapter.getFontSizeByPower(power),

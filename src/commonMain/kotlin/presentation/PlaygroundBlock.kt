@@ -49,7 +49,7 @@ class UIPlaygroundBlock(
     var onCollapseBlockAnimationFinished: () -> Unit,
     var onMoveBlockAnimationFinished: () -> Unit
 ) : Container() {
-    val blockSize: Double = CellSizeAdapter.cellSize
+    val cellSize: Double = SizeAdapter.cellSize
     val playgroundBlock = this
     init {
 
@@ -59,7 +59,7 @@ class UIPlaygroundBlock(
         )
 
         container {
-            block(power = power, cellSize = blockSize)
+            block(power = power, cellSize = cellSize)
             // text(animationState.toString())
         }
 
@@ -83,30 +83,35 @@ class UIPlaygroundBlock(
     }
 
     private fun getYPosition(animationState: PlayBlockAnimationState): Double {
+        val cellSizeWithMargin = cellSize + SizeAdapter.horizontalPlaygroundColumnMarginValue
         return when (animationState) {
-            PlayBlockAnimationState.BOTTOM -> Constants.Playground.ROW_COUNT * blockSize
-            PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetRow ?: row) * blockSize
+            PlayBlockAnimationState.BOTTOM ->
+                Constants.Playground.ROW_COUNT * cellSizeWithMargin
+            PlayBlockAnimationState.COLLAPSED ->
+                (collapsingState?.targetRow ?: row) * cellSizeWithMargin
             PlayBlockAnimationState.MOVED -> {
-                (movingState?.targetRow ?: row) * blockSize
+                (movingState?.targetRow ?: row) * cellSizeWithMargin
             }
 
-            else -> row * blockSize
+            else -> row * cellSizeWithMargin
         }
     }
 
     private fun getXPosition(animationState: PlayBlockAnimationState): Double {
+        val columnSize = SizeAdapter.columnSize
+        val margin = SizeAdapter.horizontalPlaygroundColumnMarginValue
         return when (animationState) {
-            PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetCol ?: col) * blockSize
-            PlayBlockAnimationState.MOVED -> (movingState?.targetCol ?: col) * blockSize
-            else -> col * blockSize
+            PlayBlockAnimationState.COLLAPSED -> (collapsingState?.targetCol ?: col) * columnSize + margin
+            PlayBlockAnimationState.MOVED -> (movingState?.targetCol ?: col) * columnSize + margin
+            else -> col * columnSize + margin
         }
     }
 
     fun collapseIfNeeded() {
         collapsingState?.let {
             // draw current block and target on top. Then current will fade out so the target will be seen
-            block(power = targetPower ?: power, cellSize = blockSize)
-            val blockToVanish = block(power, cellSize = blockSize)
+            block(power = targetPower ?: power, cellSize = cellSize)
+            val blockToVanish = block(power, cellSize = cellSize)
 
             launchImmediately(Dispatchers.Default) {
                 animate {

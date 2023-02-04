@@ -2,7 +2,6 @@
 import com.soywiz.korge.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
-import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korma.geom.*
@@ -14,14 +13,12 @@ suspend fun main() = Korge(
     height = Constants.UI.HEIGHT,
     virtualWidth = Constants.UI.WIDTH,
     virtualHeight = Constants.UI.HEIGHT,
-    bgcolor = Colors["#2b2b2b"],
+    bgcolor = StyledColors.theme.mainBg,
     scaleAnchor = Anchor.CENTER,
     clipBorders = false
 
 ) {
-    DefaultFontFamily.font = TtfFont(resourcesVfs["Exo2-VariableFont_wght.ttf"].readBytes())
     DefaultFontFamily.font = TtfFont(resourcesVfs["Itim-Regular.ttf"].readBytes())
-
     DefaultStorage.storage = views.storage
 
     val sceneContainer = sceneContainer()

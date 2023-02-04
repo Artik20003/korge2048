@@ -9,11 +9,11 @@ import presentation.adapters.*
 fun Container.clickableColumn(onClick: () -> Unit) = ClickableColumn(onClick).addTo(this)
 
 class ClickableColumn(onClick: () -> Unit) : Container() {
-    val cellSize: Double = CellSizeAdapter.cellSize
+
     init {
         solidRect(
-            width = cellSize,
-            height = cellSize * Constants.Playground.ROW_COUNT,
+            width = SizeAdapter.columnSize,
+            height = SizeAdapter.columnSize * Constants.Playground.ROW_COUNT,
             color = RGBA.Companion.float(0.0, 0.0, 0.0, 0.0)
         ) {
             onClick {

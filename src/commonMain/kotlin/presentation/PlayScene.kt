@@ -4,13 +4,17 @@ import Constants
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
 import com.soywiz.korge.view.*
+import com.soywiz.korim.bitmap.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
+import com.soywiz.korim.paint.*
 import com.soywiz.korim.text.*
+import com.soywiz.korim.vector.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
-import data.DefaultStorage
+import com.soywiz.korma.geom.vector.*
+import data.*
 import domain.*
 import domain.level.*
 import domain.playground.*
@@ -21,7 +25,7 @@ import presentation.adapters.*
 
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
-    val cellSize = CellSizeAdapter.cellSize
+    val cellSize = SizeAdapter.cellSize
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     val scoreManager: ScoreManager = ScoreManager(
@@ -51,6 +55,8 @@ class PlayScene() : Scene() {
                 }.launchIn(CoroutineScope(Dispatchers.Default))
             }
         }
+
+        drawBgColumns()
 
         setOnEndAnimationHandlers()
         playgroundManager.addOnStaticStateListener {
@@ -85,6 +91,28 @@ class PlayScene() : Scene() {
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
+    private fun SContainer.drawBgColumns() {
+        container {
+            alignTopToBottomOf(topBar ?: containerRoot)
+            positionX(SizeAdapter.horizontalPlaygroundMarginValue)
+
+            for (i in 0 until Constants.Playground.COL_COUNT) {
+                container {
+                    solidRect(
+                        width = SizeAdapter.cellSize,
+                        height = Constants.Playground.ROW_COUNT * SizeAdapter.cellSize,
+                        color = StyledColors.theme.playgroundColumnBg
+                    ).position(
+                        x = SizeAdapter.horizontalPlaygroundColumnMarginValue,
+                        y = 0.0
+                    )
+                }.position(
+                    x = i * SizeAdapter.columnSize,
+                    y = 0.0
+                )
+            }
+        }
+    }
     private fun setOnEndAnimationHandlers() {
 
         onNewBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
@@ -114,7 +142,7 @@ class PlayScene() : Scene() {
         blocks = mutableMapOf()
         val newPlayground = container {
             alignTopToBottomOf(topBar ?: containerRoot)
-            this.positionX((Constants.UI.WIDTH - CellSizeAdapter.cellSize * Constants.Playground.COL_COUNT) / 2)
+            this.positionX(SizeAdapter.horizontalPlaygroundMarginValue)
             playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
                 val playgroundBlock = playgroundBlock(
                     col = col,
@@ -139,7 +167,7 @@ class PlayScene() : Scene() {
                     }
                 )
                     .position(
-                        x = (colNum * cellSize).toInt(),
+                        x = (colNum * SizeAdapter.columnSize).toInt(),
                         y = 0
                     )
             }
