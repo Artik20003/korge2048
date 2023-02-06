@@ -1,11 +1,13 @@
 package domain.upcoming
 
-import kotlin.random.*
 import kotlinx.coroutines.flow.*
+import kotlin.random.*
 
 class UpcomingValuesManager {
 
     var state = MutableStateFlow<UpcomingValuesState>(UpcomingValuesState())
+
+    private var onGenerateUpcomingValuesHandlerList: MutableList<() -> Unit> = mutableListOf()
 
     init {
         generateUpcomingValues()
@@ -44,5 +46,13 @@ class UpcomingValuesManager {
                 )
             }
         }
+        launchOnGenerateUpcomingValues()
+    }
+
+    fun addOnGenerateUpcomingValuesListener(handler: () -> Unit) {
+        onGenerateUpcomingValuesHandlerList.add(handler)
+    }
+    fun launchOnGenerateUpcomingValues() {
+        onGenerateUpcomingValuesHandlerList.forEach { it() }
     }
 }

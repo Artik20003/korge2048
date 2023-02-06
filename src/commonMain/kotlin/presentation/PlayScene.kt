@@ -120,12 +120,15 @@ class PlayScene() : Scene() {
 
         levelManager.state.onEach {
             println("Setting new min upcoming value: ${it.level}")
+            upcomingBlocks.map { it?.removeFromParent() }
             upcomingValuesManager.updateLevelUpcomingValues(it.level)
+
+            upcomingBlocks = mutableListOf()
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         // upcoming values
         val strokeThickness = SizeAdapter.columnSize * .05
-        val secondScale = 0.75
+        val secondBlockScale = 0.75
         container {
 
             fun Container.upcomingRect() = RoundRect(
@@ -143,16 +146,16 @@ class PlayScene() : Scene() {
             }
 
             val secondUpcomingValueRect = upcomingRect().also {
-                it.alignLeftToRightOf(firstUpcomingValueRect, 10).scale(secondScale)
+                it.alignLeftToRightOf(firstUpcomingValueRect, 10).scale(secondBlockScale)
                 it.alignTopToBottomOf(playgroundBgColumns!!, 10)
             }
 
-            upcomingValuesManager.state.onEach {
-                println(123456)
+            upcomingValuesManager.addOnGenerateUpcomingValuesListener {
+                val upcomingValues = upcomingValuesManager.state.value.upcomingValues
                 if (upcomingBlocks.isEmpty()) {
                     upcomingBlocks.add(
                         block(
-                            power = it.upcomingValues[0],
+                            power = upcomingValues[0],
                             cellSize = SizeAdapter.cellSize,
                         ).also {
                             it.centerOn(firstUpcomingValueRect)
@@ -160,32 +163,95 @@ class PlayScene() : Scene() {
                     )
                     upcomingBlocks.add(
                         block(
-                            power = it.upcomingValues[1],
+                            power = upcomingValues[1],
                             cellSize = SizeAdapter.cellSize,
                         ).also {
-                            it.also { it.scale(secondScale) }.centerOn(secondUpcomingValueRect)
+                            it.also { it.scale(secondBlockScale) }.centerOn(secondUpcomingValueRect)
                         }
                     )
                 } else {
-
                     upcomingBlocks.getOrNull(0)?.let { firstBlock ->
-                        firstBlock.animate {
-                            parallel {
-                                moveTo(
-                                    view = firstBlock,
-                                    x = firstBlock.x,
-                                    y = firstBlock.y - firstBlock.height,
-                                    time = TimeSpan(1000.0)
-                                )
-                                hide(
-                                    view = firstBlock,
-                                    time = TimeSpan(1000.0)
-                                )
+                        upcomingBlocks.getOrNull(1)?.let { secondBlock ->
+                            val animationTime = Constants.Playground.ANIMATION_TIME
+                            val firstBlockInitialX = firstBlock.x
+                            val firstBlockInitialY = firstBlock.y
+                            val secondBlockInitialX = secondBlock.x
+                            val secondBlockInitialY = secondBlock.y
+                            val secondBlockInitialSize = secondBlock.scaledHeight
+                            launchImmediately(Dispatchers.Default) {
+
+                                firstBlock.animate {
+                                    parallel {
+                                        /*
+                                        moveTo(
+                                            view = firstBlock,
+                                            x = firstBlock.x,
+                                            y = firstBlock.y - firstBlock.height,
+                                            time = TimeSpan(animationTime)
+                                        )
+
+                                         */
+                                        hide(
+                                            view = firstBlock,
+                                            time = TimeSpan(animationTime / 2)
+                                        )
+                                    }
+                                }
+                            }
+
+                            launchImmediately(Dispatchers.Default) {
+
+                                secondBlock.animate {
+                                    parallel {
+                                        moveTo(
+                                            view = secondBlock,
+                                            x = firstBlockInitialX,
+                                            y = firstBlockInitialY,
+                                            time = TimeSpan(animationTime)
+                                        )
+                                        scaleTo(
+                                            view = secondBlock,
+                                            scaleX = 1,
+                                            time = TimeSpan(animationTime)
+                                        )
+                                        // hidden block
+                                        val hiddenBlock = block(
+                                            power = upcomingValues[1],
+                                            cellSize = SizeAdapter.cellSize,
+                                        ).also {
+                                            it.x = secondBlockInitialX
+                                            it.y = secondBlockInitialY + secondBlockInitialSize
+                                            it.scale(0)
+                                            it.centerOn(secondUpcomingValueRect)
+                                        }
+                                        launchImmediately(Dispatchers.Default) {
+                                            hiddenBlock.animate {
+                                                parallel {
+
+                                                    moveTo(
+                                                        view = hiddenBlock,
+                                                        x = secondBlockInitialX,
+                                                        y = secondBlockInitialY,
+                                                        time = TimeSpan(animationTime)
+                                                    )
+                                                    scaleBy(
+                                                        view = hiddenBlock,
+                                                        scaleX = secondBlockScale
+                                                    )
+                                                    block {
+                                                        upcomingBlocks[0] = secondBlock
+                                                        upcomingBlocks[1] = hiddenBlock
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }.launchIn(CoroutineScope(Dispatchers.Default))
+            }
         }.positionX(-strokeThickness / 2).alignTopToBottomOf(playgroundBgColumns!!, padding = 30)
     }
 
