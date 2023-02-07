@@ -45,10 +45,10 @@ class PlayScene() : Scene() {
     var playground: Container? = null
     var playgroundBgColumns: Container? = null
     var topBar: Container? = null
-    var upcomingBlocks: MutableList<Container?> = mutableListOf()
+    var upcomingBlocks = UpcomingBlocks()
 
     override suspend fun SContainer.sceneMain() {
-        // storage["best"] = "0"
+
         topBar = fixedSizeContainer(
             width = Constants.UI.WIDTH,
             height = 100,
@@ -120,139 +120,26 @@ class PlayScene() : Scene() {
 
         levelManager.state.onEach {
             println("Setting new min upcoming value: ${it.level}")
-            upcomingBlocks.map { it?.removeFromParent() }
             upcomingValuesManager.updateLevelUpcomingValues(it.level)
-
-            upcomingBlocks = mutableListOf()
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
-        // upcoming values
-        val strokeThickness = SizeAdapter.columnSize * .05
-        val secondBlockScale = 0.75
-        container {
 
-            fun Container.upcomingRect() = RoundRect(
-                width = SizeAdapter.columnSize,
-                height = SizeAdapter.columnSize,
-                rx = SizeAdapter.columnSize * .17,
-                stroke = Colors.WHITE,
-                fill = Colors.TRANSPARENT_WHITE,
-                strokeThickness = strokeThickness
-            ).addTo(this)
+        // upcomingValues UI
+        val upcomingValues = upcomingValuesManager.state.value.upcomingValues
 
-            val firstUpcomingValueRect = upcomingRect().also {
-                it.alignTopToBottomOf(playgroundBgColumns!!, 10)
-                it.centerXOn(playgroundBgColumns!!)
-            }
+        upcomingBlocks.setAlignUnderContainer(playgroundBgColumns!!)
+        upcomingBlocks.addTo(this)
+        upcomingBlocks.drawUpcomingValues(
+            firstValue = upcomingValues[0],
+            secondValue = upcomingValues[1],
+        )
 
-            val secondUpcomingValueRect = upcomingRect().also {
-                it.alignLeftToRightOf(firstUpcomingValueRect, 10).scale(secondBlockScale)
-                it.alignTopToBottomOf(playgroundBgColumns!!, 10)
-            }
-
-            upcomingValuesManager.addOnGenerateUpcomingValuesListener {
-                val upcomingValues = upcomingValuesManager.state.value.upcomingValues
-                if (upcomingBlocks.isEmpty()) {
-                    upcomingBlocks.add(
-                        block(
-                            power = upcomingValues[0],
-                            cellSize = SizeAdapter.cellSize,
-                        ).also {
-                            it.centerOn(firstUpcomingValueRect)
-                        }
-                    )
-                    upcomingBlocks.add(
-                        block(
-                            power = upcomingValues[1],
-                            cellSize = SizeAdapter.cellSize,
-                        ).also {
-                            it.also { it.scale(secondBlockScale) }.centerOn(secondUpcomingValueRect)
-                        }
-                    )
-                } else {
-                    upcomingBlocks.getOrNull(0)?.let { firstBlock ->
-                        upcomingBlocks.getOrNull(1)?.let { secondBlock ->
-                            val animationTime = Constants.Playground.ANIMATION_TIME
-                            val firstBlockInitialX = firstBlock.x
-                            val firstBlockInitialY = firstBlock.y
-                            val secondBlockInitialX = secondBlock.x
-                            val secondBlockInitialY = secondBlock.y
-                            val secondBlockInitialSize = secondBlock.scaledHeight
-                            launchImmediately(Dispatchers.Default) {
-
-                                firstBlock.animate {
-                                    parallel {
-                                        /*
-                                        moveTo(
-                                            view = firstBlock,
-                                            x = firstBlock.x,
-                                            y = firstBlock.y - firstBlock.height,
-                                            time = TimeSpan(animationTime)
-                                        )
-
-                                         */
-                                        hide(
-                                            view = firstBlock,
-                                            time = TimeSpan(animationTime / 2)
-                                        )
-                                    }
-                                }
-                            }
-
-                            launchImmediately(Dispatchers.Default) {
-
-                                secondBlock.animate {
-                                    parallel {
-                                        moveTo(
-                                            view = secondBlock,
-                                            x = firstBlockInitialX,
-                                            y = firstBlockInitialY,
-                                            time = TimeSpan(animationTime)
-                                        )
-                                        scaleTo(
-                                            view = secondBlock,
-                                            scaleX = 1,
-                                            time = TimeSpan(animationTime)
-                                        )
-                                        // hidden block
-                                        val hiddenBlock = block(
-                                            power = upcomingValues[1],
-                                            cellSize = SizeAdapter.cellSize,
-                                        ).also {
-                                            it.x = secondBlockInitialX
-                                            it.y = secondBlockInitialY + secondBlockInitialSize
-                                            it.scale(0)
-                                            it.centerOn(secondUpcomingValueRect)
-                                        }
-                                        launchImmediately(Dispatchers.Default) {
-                                            hiddenBlock.animate {
-                                                parallel {
-
-                                                    moveTo(
-                                                        view = hiddenBlock,
-                                                        x = secondBlockInitialX,
-                                                        y = secondBlockInitialY,
-                                                        time = TimeSpan(animationTime)
-                                                    )
-                                                    scaleBy(
-                                                        view = hiddenBlock,
-                                                        scaleX = secondBlockScale
-                                                    )
-                                                    block {
-                                                        upcomingBlocks[0] = secondBlock
-                                                        upcomingBlocks[1] = hiddenBlock
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }.positionX(-strokeThickness / 2).alignTopToBottomOf(playgroundBgColumns!!, padding = 30)
+        upcomingValuesManager.addOnGenerateUpcomingValuesListener {
+            upcomingBlocks.rotateValues(
+                firstValue = upcomingValuesManager.state.value.upcomingValues[0],
+                secondValue = upcomingValuesManager.state.value.upcomingValues[1]
+            )
+        }
     }
 
     private fun SContainer.drawBgColumns(): Container {
@@ -327,7 +214,9 @@ class PlayScene() : Scene() {
             for (colNum in 0 until Constants.Playground.COL_COUNT) {
                 clickableColumn(
                     onClick = {
-                        playgroundManager.push(colNum, upcomingValuesManager.popCurrentUpcomingValue())
+                        playgroundManager.push(colNum, upcomingValuesManager.state.value.upcomingValues[0]) {
+                            upcomingValuesManager.generateUpcomingValues()
+                        }
                     }
                 )
                     .position(

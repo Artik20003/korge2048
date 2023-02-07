@@ -12,11 +12,6 @@ class UpcomingValuesManager {
     init {
         generateUpcomingValues()
     }
-    fun popCurrentUpcomingValue(): Int {
-        val currentValue = state.value.upcomingValues[0]
-        generateUpcomingValues()
-        return currentValue
-    }
 
     fun updateLevelUpcomingValues(level: Int) {
         setMinUpcomingValue(level)
@@ -31,10 +26,12 @@ class UpcomingValuesManager {
     private fun setMinUpcomingValue(value: Int) {
         state.value = state.value.copy(upcomingMin = value)
     }
+
     private fun getGeneratedValue(): Int {
         return Random(3).nextInt(state.value.upcomingMin, state.value.upcomingMax)
     }
-    private fun generateUpcomingValues() {
+
+    fun generateUpcomingValues() {
         state.update {
             if (state.value.upcomingValues.isEmpty()) {
                 it.copy(

@@ -1,8 +1,8 @@
 package domain.playground
 import Constants
 import com.soywiz.korio.util.*
-import kotlin.collections.set
 import kotlinx.coroutines.flow.*
+import kotlin.collections.set
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -26,7 +26,7 @@ class PlaygroundManager {
         staticHandlerList.forEach { it() }
     }
 
-    fun push(column: Int, power: Int) {
+    fun push(column: Int, power: Int, callback: () -> Unit) {
 
         if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
@@ -59,6 +59,7 @@ class PlaygroundManager {
             playground = state.value.playground
         )
         preparePlaygroundForCollapsing()
+        callback()
 
         // updatePlaygroundAnimationState()
     }
