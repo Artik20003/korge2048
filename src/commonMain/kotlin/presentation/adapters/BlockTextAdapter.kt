@@ -27,19 +27,19 @@ object BlockTextAdapter {
 
     private fun generateTextByPower(power: Int): String {
         var powerString = (2.0.pow(power)).toLong().toString()
+        return generateTextByStringValue(powerString)
+    }
 
-        if (powerString.length <= 4) {
-            return powerString
+    fun generateTextByStringValue(valueString: String): String {
+        if (valueString.length <= 4) {
+            return valueString
         }
 
-        val m = powerString.length % 3
-        val kTimes = ((powerString.length + (3 - m) % 3) / 3) - 1
+        val m = valueString.length % 3
+        val kTimes = ((valueString.length + (3 - m) % 3) / 3) - 1
 
         val resSymbol: String = if (kTimes == 1) "K" else (kTimes + 63).toChar().toString()
-        powerString = powerString.substring(0, powerString.length - 3 * kTimes) + resSymbol
-
-        savePowerText(power, powerString)
-        return powerString
+        return valueString.substring(0, valueString.length - 3 * kTimes) + resSymbol
     }
 
     fun getFontSizeByPower(power: Int): Double {

@@ -56,12 +56,12 @@ class PlayScene() : Scene() {
 
             // Current Score
             text(
-                text = scoreManager.state.value.score.toString(),
+                text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.score),
                 textSize = 60.0,
                 font = DefaultFontFamily.font,
             ) {
                 scoreManager.state.onEach {
-                    text = it.score.toString()
+                    text = ScoreTextAdapter.getTextByScore(it.score)
                     centerOn(this.parent ?: this.containerRoot)
                 }.launchIn(CoroutineScope(Dispatchers.Default))
             }
@@ -74,13 +74,13 @@ class PlayScene() : Scene() {
             }
 
             text(
-                text = scoreManager.state.value.bestScore.toString(),
+                text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
                 textSize = 35.0,
             ) {
                 alignLeftToRightOf(crownIcon, 7.0)
                 positionY(13)
                 scoreManager.state.onEach {
-                    text = it.bestScore.toString()
+                    text = ScoreTextAdapter.getTextByScore(it.bestScore)
                     alignLeftToRightOf(crownIcon, 6.0)
                     bestScoreContainer.alignRightToRightOf(topBar!!, 15)
                 }.launchIn(CoroutineScope(Dispatchers.Default))
@@ -122,7 +122,6 @@ class PlayScene() : Scene() {
             println("Setting new min upcoming value: ${it.level}")
             upcomingValuesManager.updateLevelUpcomingValues(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
-
 
         // upcomingValues UI
         val upcomingValues = upcomingValuesManager.state.value.upcomingValues
