@@ -93,6 +93,15 @@ class PlaygroundManager {
                 launchOnStaticStateHandlers()
             }
 
+            AnimationState.BLOCKS_REMOVING -> {
+                println("currenst state blocks removing")
+                if (!state.value.hasBlocksToRemove) {
+                    println("no blocks to remove")
+                    setAnimationState(AnimationState.STATIC)
+                    return
+                }
+            }
+
             else -> Unit
         }
 
@@ -255,12 +264,14 @@ class PlaygroundManager {
         for (col in 0 until Constants.Playground.COL_COUNT) {
             var shiftValue = 0
             state.value.playground.blocks[col].forEachIndexed { row, block ->
-                if (block.collapsingState !== null &&
+
+                val hasCollapsingStateNotSelf = block.collapsingState !== null &&
                     (
                         block.collapsingState?.targetCol != col ||
                             block.collapsingState?.targetRow != row
                         )
-                )
+
+                if (hasCollapsingStateNotSelf || block.removingState)
                     shiftValue++
                 else if (shiftValue > 0)
                     state.value.playground.blocks[col][row]
@@ -279,6 +290,11 @@ class PlaygroundManager {
 
         val newPlayground = Playground()
         state.value.playground.iterateBlocks { col, row, block ->
+
+            if (block.removingState) {
+                return@iterateBlocks
+            }
+
             block.collapsingState?.let { collapsingState ->
                 if (
                     collapsingState.targetCol == col &&
@@ -354,4 +370,27 @@ class PlaygroundManager {
         println(log)
     }
      */
+
+    fun removeBlock(col: Int, row: Int) {
+//        val newBlocks = state.value.playground.blocks
+//        newBlocks[col][row].removingState = true
+//        state.update {
+//            it.copy(
+//                playground = it.playground.copy(
+//                    blocks = newBlocks
+//                )
+//            )
+//        }
+        state.value.playground.blocks[col][row].removingState = true
+        state.value = state.value
+    }
+
+    fun removeBlocksByMinPower(minValidPower: Int) {
+        state.value.playground.iterateBlocks { col, row, block ->
+            if (block.power < minValidPower) {
+                removeBlock(col, row)
+            }
+        }
+        setAnimationState(AnimationState.BLOCKS_REMOVING)
+    }
 }

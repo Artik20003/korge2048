@@ -7,6 +7,7 @@ data class PlaygroundBlock(
     val id: UUID = UUID.randomUUID(),
     var collapsingState: ChangingState? = null,
     var movingState: ChangingState? = null,
+    var removingState: Boolean = false,
     var targetPowerShift: Int = 0,
     var isPrioritizedForCollapsing: Boolean = false,
 

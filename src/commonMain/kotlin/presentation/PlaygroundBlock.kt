@@ -18,9 +18,11 @@ fun Container.playgroundBlock(
     targetPower: Int? = null,
     collapsingState: PlaygroundBlock.ChangingState? = null,
     movingState: PlaygroundBlock.ChangingState? = null,
+    removingState: Boolean = false,
     onNewBlockAnimationFinished: () -> Unit,
     onCollapseBlockAnimationFinished: () -> Unit,
-    onMoveBlockAnimationFinished: () -> Unit
+    onMoveBlockAnimationFinished: () -> Unit,
+    onRemoveBlockAnimationFinished: () -> Unit
 ) =
     UIPlaygroundBlock(
         col = col,
@@ -31,9 +33,11 @@ fun Container.playgroundBlock(
         targetPower = targetPower,
         collapsingState = collapsingState,
         movingState = movingState,
+        removingState = removingState,
         onNewBlockAnimationFinished = onNewBlockAnimationFinished,
         onCollapseBlockAnimationFinished = onCollapseBlockAnimationFinished,
         onMoveBlockAnimationFinished = onMoveBlockAnimationFinished,
+        onRemoveBlockAnimationFinished = onRemoveBlockAnimationFinished,
     ).addTo(this)
 
 class UIPlaygroundBlock(
@@ -45,8 +49,10 @@ class UIPlaygroundBlock(
     var targetPower: Int? = null,
     var collapsingState: PlaygroundBlock.ChangingState? = null,
     var movingState: PlaygroundBlock.ChangingState? = null,
+    var removingState: Boolean = false,
     var onNewBlockAnimationFinished: () -> Unit,
     var onCollapseBlockAnimationFinished: () -> Unit,
+    var onRemoveBlockAnimationFinished: () -> Unit,
     var onMoveBlockAnimationFinished: () -> Unit
 ) : Container() {
     val cellSize: Double = SizeAdapter.cellSize
@@ -156,5 +162,29 @@ class UIPlaygroundBlock(
                 }
             }
         }
+    }
+
+    fun removeIfNeeded() {
+        if (!removingState) return
+        onRemoveBlockAnimationFinished()
+//        launchImmediately(Dispatchers.Default) {
+//            playgroundBlock.animate {
+//                parallel {
+//                    moveTo(
+//                        view = playgroundBlock,
+//                        100,
+//                        100,
+//                    )
+//
+//                    hide(
+//                        view = playgroundBlock,
+//                        time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+//                    )
+//                }
+//                block {
+//                    playgroundBlock.removeFromParent()
+//                }
+//            }
+//        }
     }
 }

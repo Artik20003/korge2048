@@ -52,6 +52,13 @@ data class PlaygroundState(
                 havingChangingStateElem != null
             }.contains(true)
 
+    val hasBlocksToRemove: Boolean
+        get() =
+            playground.blocks.map {
+                val hasRemovingState = it.find { it.removingState == true }
+                hasRemovingState != null
+            }.contains(true)
+
     val currentBlocksCount: Int
         get() {
             var count = 0
@@ -81,6 +88,7 @@ enum class AnimationState() {
     BLOCKS_COLLAPSING,
     BLOCKS_MOVING,
     STATIC,
+    BLOCKS_REMOVING,
 }
 
 data class PlaygroundBlockAnimatingState(

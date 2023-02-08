@@ -41,6 +41,7 @@ class PlayScene() : Scene() {
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
+    var onRemoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var blocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
     var playground: Container? = null
     var playgroundBgColumns: Container? = null
@@ -48,6 +49,12 @@ class PlayScene() : Scene() {
     var upcomingBlocks = UpcomingBlocks()
 
     override suspend fun SContainer.sceneMain() {
+
+        text(playgroundManager.state.value.animationState.toString()) {
+            playgroundManager.state.onEach {
+                text = it.animationState.toString()
+            }.launchIn(CoroutineScope(Dispatchers.Default))
+        }
 
         topBar = fixedSizeContainer(
             width = Constants.UI.WIDTH,
@@ -115,12 +122,16 @@ class PlayScene() : Scene() {
                 AnimationState.BLOCKS_MOVING -> {
                     blocks.forEach { it.value.moveIfNeeded() }
                 }
+                AnimationState.BLOCKS_REMOVING -> {
+                    blocks.forEach { it.value.removeIfNeeded() }
+                }
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         levelManager.state.onEach {
             println("Setting new min upcoming value: ${it.level}")
             upcomingValuesManager.updateLevelUpcomingValues(it.level)
+            playgroundManager.removeBlocksByMinPower(it.level)
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
         // upcomingValues UI
@@ -185,6 +196,13 @@ class PlayScene() : Scene() {
                 onMoveBlockAnimationFinishedFlag.value = false
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
+
+        onRemoveBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
+            if (flag) {
+                playgroundManager.setAnimationState(AnimationState.STATIC)
+                onRemoveBlockAnimationFinishedFlag.value = false
+            }
+        }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
     fun SContainer.redrawPlayground() {
@@ -203,10 +221,12 @@ class PlayScene() : Scene() {
                     targetPower = block.targetPower,
                     collapsingState = block.collapsingState,
                     movingState = block.movingState,
+                    removingState = block.removingState,
                     playgroundAnimationState = playgroundManager.state.value.animationState,
                     onNewBlockAnimationFinished = { onNewBlockAnimationFinishedFlag.value = true },
                     onCollapseBlockAnimationFinished = { onCollapseBlockAnimationFinishedFlag.value = true },
-                    onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true }
+                    onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true },
+                    onRemoveBlockAnimationFinished = { onRemoveBlockAnimationFinishedFlag.value = true }
                 )
                 blocks[block.id] = playgroundBlock
             }
@@ -223,8 +243,6 @@ class PlayScene() : Scene() {
                         y = 0
                     )
             }
-            text(playgroundManager.state.value.animationState.toString())
-                .position(0, (cellSize * Constants.Playground.ROW_COUNT + 2).toInt())
         }
         playground?.removeFromParent()
         playground = newPlayground
