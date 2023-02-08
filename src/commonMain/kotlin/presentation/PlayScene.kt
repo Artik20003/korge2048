@@ -31,7 +31,7 @@ import presentation.adapters.*
 
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
-    val cellSize = SizeAdapter.cellSize
+
     val playgroundManager: PlaygroundManager = PlaygroundManager()
     val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     val scoreManager: ScoreManager = ScoreManager(
@@ -122,9 +122,11 @@ class PlayScene() : Scene() {
                 AnimationState.BLOCKS_MOVING -> {
                     blocks.forEach { it.value.moveIfNeeded() }
                 }
-                AnimationState.BLOCKS_REMOVING -> {
-                    blocks.forEach { it.value.removeIfNeeded() }
-                }
+                AnimationState.BLOCKS_REMOVING ->
+                    {
+                        redrawPlayground()
+                        blocks.forEach { it.value.removeIfNeeded() }
+                    }
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))
 
@@ -199,7 +201,7 @@ class PlayScene() : Scene() {
 
         onRemoveBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
             if (flag) {
-                playgroundManager.setAnimationState(AnimationState.STATIC)
+                playgroundManager.setAnimationState(AnimationState.BLOCKS_MOVING)
                 onRemoveBlockAnimationFinishedFlag.value = false
             }
         }.launchIn(CoroutineScope(Dispatchers.Default))

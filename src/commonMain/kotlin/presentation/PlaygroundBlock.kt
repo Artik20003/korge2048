@@ -22,7 +22,7 @@ fun Container.playgroundBlock(
     onNewBlockAnimationFinished: () -> Unit,
     onCollapseBlockAnimationFinished: () -> Unit,
     onMoveBlockAnimationFinished: () -> Unit,
-    onRemoveBlockAnimationFinished: () -> Unit
+    onRemoveBlockAnimationFinished: () -> Unit,
 ) =
     UIPlaygroundBlock(
         col = col,
@@ -52,13 +52,14 @@ class UIPlaygroundBlock(
     var removingState: Boolean = false,
     var onNewBlockAnimationFinished: () -> Unit,
     var onCollapseBlockAnimationFinished: () -> Unit,
+    var onMoveBlockAnimationFinished: () -> Unit,
     var onRemoveBlockAnimationFinished: () -> Unit,
-    var onMoveBlockAnimationFinished: () -> Unit
 ) : Container() {
     val cellSize: Double = SizeAdapter.cellSize
-    val playgroundBlock = this
-    init {
+    var playgroundBlock: UIPlaygroundBlock
 
+    init {
+        playgroundBlock = this
         position(
             x = getXPosition(animationState),
             y = getYPosition(animationState)
@@ -93,8 +94,10 @@ class UIPlaygroundBlock(
         return when (animationState) {
             PlayBlockAnimationState.BOTTOM ->
                 Constants.Playground.ROW_COUNT * cellSizeWithMargin
+
             PlayBlockAnimationState.COLLAPSED ->
                 (collapsingState?.targetRow ?: row) * cellSizeWithMargin
+
             PlayBlockAnimationState.MOVED -> {
                 (movingState?.targetRow ?: row) * cellSizeWithMargin
             }
@@ -165,26 +168,23 @@ class UIPlaygroundBlock(
     }
 
     fun removeIfNeeded() {
-        if (!removingState) return
-        onRemoveBlockAnimationFinished()
-//        launchImmediately(Dispatchers.Default) {
-//            playgroundBlock.animate {
-//                parallel {
-//                    moveTo(
-//                        view = playgroundBlock,
-//                        100,
-//                        100,
-//                    )
-//
-//                    hide(
-//                        view = playgroundBlock,
-//                        time = TimeSpan(Constants.Playground.ANIMATION_TIME),
-//                    )
-//                }
-//                block {
-//                    playgroundBlock.removeFromParent()
-//                }
-//            }
-//        }
+        if (!removingState) {
+            return
+        }
+
+        launchImmediately(Dispatchers.Default) {
+            playgroundBlock.animate {
+                parallel {
+                    hide(
+                        view = playgroundBlock,
+                        time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                    )
+                }
+                block {
+                    playgroundBlock.removeFromParent()
+                    onRemoveBlockAnimationFinished()
+                }
+            }
+        }
     }
 }

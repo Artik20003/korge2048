@@ -7,11 +7,19 @@ data class PlaygroundState(
     val playground: Playground = Playground(
         blocks = listOf(
 
+            mutableListOf(
+                PlaygroundBlock(power = 1),
+                PlaygroundBlock(power = 2),
+            ),
             mutableListOf(),
             mutableListOf(),
-            mutableListOf(),
-            mutableListOf(),
-            mutableListOf(),
+            mutableListOf(
+                PlaygroundBlock(power = 3),
+            ),
+            mutableListOf(
+                PlaygroundBlock(power = 2),
+                PlaygroundBlock(power = 1),
+            ),
 
          /*   mutableListOf(
                 PlaygroundBlock(power = 7),
@@ -100,5 +108,4 @@ enum class PlayBlockAnimationState() {
     PLACED,
     MOVED,
     COLLAPSED,
-    DISAPPEARED
 }
