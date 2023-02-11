@@ -1,6 +1,8 @@
 package domain.score
 
+import com.soywiz.kbignum.*
+
 data class ScoreState(
-    var score: Int = 0,
-    var bestScore: Int = 0,
+    var score: BigInt = BigInt.ZERO,
+    var bestScore: BigInt = BigInt.ZERO,
 )

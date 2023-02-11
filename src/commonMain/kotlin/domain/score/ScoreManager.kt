@@ -1,5 +1,6 @@
 package domain.score
 
+import com.soywiz.kbignum.*
 import com.soywiz.korge.service.storage.*
 import domain.playground.*
 import kotlin.math.*
@@ -23,34 +24,37 @@ class ScoreManager(
         )
     }
 
-    private fun getBestScoreFromStorage(): Int {
-        return storage.getOrNull("best")?.toInt() ?: 0
+    private fun getBestScoreFromStorage(): BigInt {
+        storage.getOrNull("best")?.let {
+            return BigInt(it)
+        }
+        return BigInt.ZERO
     }
 
-    fun getBestScore(): Int {
+    fun getBestScore(): BigInt {
         return state.value.bestScore
     }
 
-    private fun setBestScore(score: Int) {
+    private fun setBestScore(score: BigInt) {
         state.value = state.value.copy(bestScore = score)
         storeBestScore(score)
     }
 
-    private fun storeBestScore(score: Int) {
+    private fun storeBestScore(score: BigInt) {
         storage["best"] = score.toString()
     }
 
-    private fun updateBestScoreIfPossible(score: Int) {
+    private fun updateBestScoreIfPossible(score: BigInt) {
         if (score > getBestScore()) {
             setBestScore(score)
         }
     }
 
-    fun getScore(): Int {
+    fun getScore(): BigInt {
         return state.value.score
     }
 
-    private fun setScore(score: Int) {
+    private fun setScore(score: BigInt) {
         state.value = state.value.copy(score = score)
     }
 
@@ -67,7 +71,7 @@ class ScoreManager(
             }
         }
 
-        setScore(state.value.score + scoreSpread)
+        setScore(state.value.score + BigInt(scoreSpread))
         updateBestScoreIfPossible(state.value.score)
         println(
             "Current score: " + "${getScore()} " +
