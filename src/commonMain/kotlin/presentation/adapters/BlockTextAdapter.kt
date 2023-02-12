@@ -1,5 +1,5 @@
 package presentation.adapters
-import kotlin.math.*
+import com.soywiz.kbignum.*
 
 object BlockTextAdapter {
 
@@ -26,7 +26,7 @@ object BlockTextAdapter {
     }
 
     private fun generateTextByPower(power: Int): String {
-        var powerString = (2.0.pow(power)).toLong().toString()
+        val powerString = BigInt("2").pow(power).toString()
         return generateTextByStringValue(powerString)
     }
 
