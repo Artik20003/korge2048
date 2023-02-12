@@ -3,7 +3,6 @@ package domain.score
 import com.soywiz.kbignum.*
 import com.soywiz.korge.service.storage.*
 import domain.playground.*
-import kotlin.math.*
 import kotlinx.coroutines.flow.*
 
 class ScoreManager(
@@ -59,19 +58,19 @@ class ScoreManager(
     }
 
     fun updateScore() {
-        var scoreSpread = 0
+        var scoreSpread: BigInt = BigInt.ZERO
 
         playground.iterateBlocks { col, row, block ->
             block.collapsingState?.let { collapsingState ->
                 if (collapsingState.targetCol == col && collapsingState.targetRow == row) {
                     block.targetPower?.let { targetPower ->
-                        scoreSpread += 2.0.pow(targetPower).toInt() * (targetPower - block.power)
+                        scoreSpread += BigInt(2).pow(targetPower) * (targetPower - block.power)
                     }
                 }
             }
         }
 
-        setScore(state.value.score + BigInt(scoreSpread))
+        setScore(state.value.score + scoreSpread)
         updateBestScoreIfPossible(state.value.score)
         println(
             "Current score: " + "${getScore()} " +
