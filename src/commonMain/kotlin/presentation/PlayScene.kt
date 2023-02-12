@@ -9,6 +9,7 @@ import com.soywiz.korge.view.*
 import com.soywiz.korim.bitmap.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
+import com.soywiz.korim.format.*
 import com.soywiz.korim.paint.*
 import com.soywiz.korim.text.*
 import com.soywiz.korim.vector.*
@@ -152,6 +153,25 @@ class PlayScene() : Scene() {
                 secondValue = upcomingValuesManager.state.value.upcomingValues[1]
             )
         }
+
+
+    }
+
+    private suspend fun SContainer.showFireworks(text: String) {
+        val spriteMap = resourcesVfs["sprites/fireworks.png"].readBitmap()
+        val explosionAnimation = SpriteAnimation(
+            spriteMap = spriteMap,
+            spriteWidth = 300,
+            spriteHeight = 300,
+            marginTop = 0,
+            marginLeft = 0,
+            columns = 1,
+            rows = 50,
+            offsetBetweenColumns = 0,
+            offsetBetweenRows = 0,
+        )
+        val explosion = sprite(explosionAnimation)
+        explosion.playAnimation()
     }
 
     private fun SContainer.drawBgColumns(): Container {
