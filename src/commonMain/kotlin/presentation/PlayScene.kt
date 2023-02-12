@@ -196,6 +196,7 @@ class PlayScene() : Scene() {
             val text = Text(
                 text = wowText,
                 textSize = SizeAdapter.cellSize / 1.5,
+                font = DefaultFontFamily.font
             ).centerOn(wowContainer).addTo(wowContainer)
 
             animate {
