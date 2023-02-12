@@ -20,6 +20,7 @@ import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
 import com.soywiz.korma.geom.*
 import com.soywiz.korma.geom.vector.*
+import com.soywiz.korma.interpolation.*
 import data.*
 import domain.*
 import domain.level.*
@@ -109,6 +110,12 @@ class PlayScene() : Scene() {
             scoreManager.playground = playgroundManager.state.value.playground
             scoreManager.updateScore()
         }
+        // show Cascade
+        playgroundManager.addOnCascadeListener { cascadeCount ->
+            launchImmediately {
+                showWowCascadeContainer(cascadeCount)
+            }
+        }
 
         // !!TODO launch only if animationState changed
         playgroundManager.state.debounce(20).onEach { state ->
@@ -153,25 +160,65 @@ class PlayScene() : Scene() {
                 secondValue = upcomingValuesManager.state.value.upcomingValues[1]
             )
         }
-
-
     }
 
-    private suspend fun SContainer.showFireworks(text: String) {
-        val spriteMap = resourcesVfs["sprites/fireworks.png"].readBitmap()
-        val explosionAnimation = SpriteAnimation(
-            spriteMap = spriteMap,
-            spriteWidth = 300,
-            spriteHeight = 300,
-            marginTop = 0,
-            marginLeft = 0,
-            columns = 1,
-            rows = 50,
-            offsetBetweenColumns = 0,
-            offsetBetweenRows = 0,
-        )
-        val explosion = sprite(explosionAnimation)
-        explosion.playAnimation()
+    private suspend fun SContainer.showWowCascadeContainer(cascadeCount: Int) {
+        val wowText: String? = when (cascadeCount) {
+            3 -> "WOW!"
+            4 -> "PERFECT!"
+            5 -> "BRILLIANT!"
+            6 -> "OMG!"
+            7 -> "CHUCK NORRIS!"
+            else -> null
+        }
+        wowText?.let {
+            val wowContainer = container {
+                centerOn(playground ?: containerRoot)
+                zIndex = 100.0
+            }
+
+            val spriteMap = resourcesVfs["sprites/fireworks.png"].readBitmap()
+            val explosionAnimation = SpriteAnimation(
+                spriteMap = spriteMap,
+                spriteWidth = 300,
+                spriteHeight = 300,
+                marginTop = 0,
+                marginLeft = 0,
+                columns = 1,
+                rows = 50,
+                offsetBetweenColumns = 0,
+                offsetBetweenRows = 0,
+            )
+
+            val explosion = Sprite(explosionAnimation)
+                .centerOn(wowContainer)
+                .addTo(wowContainer)
+            val text = Text(
+                text = wowText,
+                textSize = SizeAdapter.cellSize / 1.5,
+            ).centerOn(wowContainer).addTo(wowContainer)
+
+            animate {
+                parallel {
+                    explosion.playAnimation()
+
+                    scaleTo(
+                        view = wowContainer,
+                        scaleX = 1.25,
+                        time = TimeSpan(800.0)
+                    )
+
+                    hide(
+                        view = text,
+                        time = TimeSpan(1000.0),
+                        easing = Easing.EASE_IN_OUT
+                    )
+                }
+                block {
+                    wowContainer.removeFromParent()
+                }
+            }
+        }
     }
 
     private fun SContainer.drawBgColumns(): Container {

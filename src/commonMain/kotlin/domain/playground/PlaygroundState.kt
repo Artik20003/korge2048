@@ -6,45 +6,59 @@ data class PlaygroundState(
 
     val playground: Playground = Playground(
         blocks = listOf(
-
             mutableListOf(
-                PlaygroundBlock(power = 21),
-                PlaygroundBlock(power = 20),
-            ),
-            mutableListOf(),
-            mutableListOf(),
-            mutableListOf(
-                PlaygroundBlock(power = 20),
-            ),
-            mutableListOf(
-                PlaygroundBlock(power = 22),
-                PlaygroundBlock(power = 21),
-            ),
-
-         /*   mutableListOf(
+                PlaygroundBlock(power = 8),
                 PlaygroundBlock(power = 7),
+                PlaygroundBlock(power = 6),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 2),
             ),
             mutableListOf(
+                /*
+                PlaygroundBlock(power = 7),
+                PlaygroundBlock(power = 6),
                 PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
                 PlaygroundBlock(power = 3),
-            ),
-            mutableListOf(
-                PlaygroundBlock(power = 3),
-                PlaygroundBlock(power = 5),
-                PlaygroundBlock(power = 3),
-            ),
-            mutableListOf(),
-            mutableListOf(),*/
+                PlaygroundBlock(power = 2),
 
+                 */
+            ),
+            mutableListOf(
+
+                PlaygroundBlock(power = 6),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 2),
+
+            ),
+            mutableListOf(
+                /*
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 2),
+
+                 */
+            ),
+            mutableListOf(
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+            ),
         ),
     ),
 
     // var level: Int = 1,
-    val score: Long = 0,
+    // val score: Long = 0,
 
     var playgroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> = emptyMap(),
     val lastAddedColumn: Int? = null,
     val animationState: AnimationState = AnimationState.STATIC,
+    val currentCascadeCount: Int = 0
 
 ) {
     val hasBlocksToCollapse: Boolean
@@ -66,13 +80,6 @@ data class PlaygroundState(
                 val hasRemovingState = it.find { it.removingState == true }
                 hasRemovingState != null
             }.contains(true)
-
-    val currentBlocksCount: Int
-        get() {
-            var count = 0
-            playground.blocks.map { it.size }.forEach { count += it }
-            return count
-        }
 
     init {
         if (playgroundBlocksAnimatingState.isEmpty()) {

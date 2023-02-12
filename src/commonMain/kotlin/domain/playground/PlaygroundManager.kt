@@ -8,22 +8,31 @@ class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
         private set
     private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
-    private var collapsedHanlderList: MutableList<() -> Unit> = mutableListOf()
+    private var cascadeHandlerList: MutableList<(cascadeCount: Int) -> Unit> = mutableListOf()
+    private var collapsedHandlerList: MutableList<() -> Unit> = mutableListOf()
 
     fun addOnStaticStateListener(handler: () -> Unit) {
         staticHandlerList.add(handler)
     }
 
     fun addOnCollapsedStateListener(handler: () -> Unit) {
-        collapsedHanlderList.add(handler)
+        collapsedHandlerList.add(handler)
     }
 
-    fun launchOnCollapsedStateHandlers() {
-        collapsedHanlderList.forEach { it() }
+    private fun launchOnCollapsedStateHandlers() {
+        collapsedHandlerList.forEach { it() }
     }
 
-    fun launchOnStaticStateHandlers() {
+    private fun launchOnStaticStateHandlers() {
         staticHandlerList.forEach { it() }
+    }
+
+    fun addOnCascadeListener(handler: (cascadeCount: Int) -> Unit) {
+        cascadeHandlerList.add(handler)
+    }
+
+    private fun launchOnCascadeHandlers() {
+        cascadeHandlerList.forEach { it(state.value.currentCascadeCount) }
     }
 
     fun push(column: Int, power: Int, callback: () -> Unit) {
@@ -72,6 +81,7 @@ class PlaygroundManager {
                     setAnimationState(AnimationState.STATIC)
                     return
                 }
+                state.value = state.value.copy(currentCascadeCount = (state.value.currentCascadeCount + 1))
                 launchOnCollapsedStateHandlers()
             }
 
@@ -91,6 +101,8 @@ class PlaygroundManager {
                     return
                 }
                 launchOnStaticStateHandlers()
+                launchOnCascadeHandlers()
+                state.value = state.value.copy(currentCascadeCount = 0)
             }
 
             AnimationState.BLOCKS_REMOVING -> {
@@ -102,7 +114,9 @@ class PlaygroundManager {
                 }
             }
 
-            else -> Unit
+            else -> {
+                Unit
+            }
         }
 
         state.value = state.value.copy(animationState = animationState)
