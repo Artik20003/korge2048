@@ -1,8 +1,8 @@
 package domain.score
 
+import com.soywiz.kbignum.*
 import com.soywiz.korge.service.storage.*
 import domain.playground.*
-import kotlin.math.*
 import kotlinx.coroutines.flow.*
 
 class ScoreManager(
@@ -23,45 +23,48 @@ class ScoreManager(
         )
     }
 
-    private fun getBestScoreFromStorage(): Int {
-        return storage.getOrNull("best")?.toInt() ?: 0
+    private fun getBestScoreFromStorage(): BigInt {
+        storage.getOrNull("best")?.let {
+            return BigInt(it)
+        }
+        return BigInt.ZERO
     }
 
-    fun getBestScore(): Int {
+    fun getBestScore(): BigInt {
         return state.value.bestScore
     }
 
-    private fun setBestScore(score: Int) {
+    private fun setBestScore(score: BigInt) {
         state.value = state.value.copy(bestScore = score)
         storeBestScore(score)
     }
 
-    private fun storeBestScore(score: Int) {
+    private fun storeBestScore(score: BigInt) {
         storage["best"] = score.toString()
     }
 
-    private fun updateBestScoreIfPossible(score: Int) {
+    private fun updateBestScoreIfPossible(score: BigInt) {
         if (score > getBestScore()) {
             setBestScore(score)
         }
     }
 
-    fun getScore(): Int {
+    fun getScore(): BigInt {
         return state.value.score
     }
 
-    private fun setScore(score: Int) {
+    private fun setScore(score: BigInt) {
         state.value = state.value.copy(score = score)
     }
 
     fun updateScore() {
-        var scoreSpread = 0
+        var scoreSpread: BigInt = BigInt.ZERO
 
         playground.iterateBlocks { col, row, block ->
             block.collapsingState?.let { collapsingState ->
                 if (collapsingState.targetCol == col && collapsingState.targetRow == row) {
                     block.targetPower?.let { targetPower ->
-                        scoreSpread += 2.0.pow(targetPower).toInt() * (targetPower - block.power)
+                        scoreSpread += BigInt(2).pow(targetPower) * (targetPower - block.power)
                     }
                 }
             }

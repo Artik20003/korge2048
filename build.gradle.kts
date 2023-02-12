@@ -49,3 +49,16 @@ dependencies {
     add("commonMainApi", project(":deps"))
     // add("commonMainApi", project(":korge-dragonbones"))
 }
+
+val kbignumVersion = "2.5.0"
+
+// For multiplatform projects
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation("com.soywiz.korlibs.kbignum:kbignum:$kbignumVersion")
+            }
+        }
+    }
+}

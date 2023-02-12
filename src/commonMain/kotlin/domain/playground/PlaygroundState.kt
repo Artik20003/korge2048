@@ -8,17 +8,17 @@ data class PlaygroundState(
         blocks = listOf(
 
             mutableListOf(
-                PlaygroundBlock(power = 1),
-                PlaygroundBlock(power = 2),
+                PlaygroundBlock(power = 21),
+                PlaygroundBlock(power = 20),
             ),
             mutableListOf(),
             mutableListOf(),
             mutableListOf(
-                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 20),
             ),
             mutableListOf(
-                PlaygroundBlock(power = 2),
-                PlaygroundBlock(power = 1),
+                PlaygroundBlock(power = 22),
+                PlaygroundBlock(power = 21),
             ),
 
          /*   mutableListOf(
