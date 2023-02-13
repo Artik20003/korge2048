@@ -57,7 +57,7 @@ class UIPlaygroundBlock(
 ) : Container() {
     val cellSize: Double = SizeAdapter.cellSize
     var playgroundBlock: UIPlaygroundBlock
-
+    val isExtraRowPlacing = row == Constants.Playground.ROW_COUNT
     init {
         playgroundBlock = this
         position(
@@ -66,10 +66,11 @@ class UIPlaygroundBlock(
         )
 
         container {
-            block(power = power, cellSize = cellSize)
-            // text(animationState.toString())
+            if (!isExtraRowPlacing) {
+                block(power = power, cellSize = cellSize)
+                // text(animationState.toString())
+            }
         }
-
         if (animationState == PlayBlockAnimationState.BOTTOM) {
             launchImmediately(Dispatchers.Default) {
                 animate {
@@ -78,7 +79,11 @@ class UIPlaygroundBlock(
                             view = playgroundBlock,
                             x = getXPosition(PlayBlockAnimationState.PLACED),
                             y = getYPosition(PlayBlockAnimationState.PLACED),
-                            time = TimeSpan(Constants.Playground.ANIMATION_TIME)
+                            time =
+                            if (!isExtraRowPlacing)
+                                TimeSpan(Constants.Playground.ANIMATION_TIME)
+                            else
+                                TimeSpan(0.0)
                         )
                     }
                     block {
@@ -129,7 +134,11 @@ class UIPlaygroundBlock(
                             view = playgroundBlock,
                             x = getXPosition(PlayBlockAnimationState.COLLAPSED),
                             y = getYPosition(PlayBlockAnimationState.COLLAPSED),
-                            time = TimeSpan(Constants.Playground.ANIMATION_TIME),
+                            time =
+                            if (!isExtraRowPlacing)
+                                TimeSpan(Constants.Playground.ANIMATION_TIME)
+                            else
+                                TimeSpan(0.0)
                         )
                         hide(
                             view = blockToVanish,

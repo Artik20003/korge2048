@@ -1,8 +1,8 @@
 package domain.playground
 import Constants
 import com.soywiz.korio.util.*
-import kotlin.collections.set
 import kotlinx.coroutines.flow.*
+import kotlin.collections.set
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -39,7 +39,12 @@ class PlaygroundManager {
 
         if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
-        if (state.value.playground.blocks[column].size >= Constants.Playground.ROW_COUNT) return
+        if (state.value.playground.blocks[column].size >= Constants.Playground.ROW_COUNT + 1) return
+        if (
+            state.value.playground.blocks[column].size == Constants.Playground.ROW_COUNT &&
+            power != (state.value.playground.blocks[column].lastOrNull()?.power ?: -1)
+        ) return
+
         if (state.value.animationState != AnimationState.STATIC) return
 
         // start animation
