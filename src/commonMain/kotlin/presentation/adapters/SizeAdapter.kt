@@ -18,4 +18,12 @@ object SizeAdapter {
 
     val columnSize: Double =
         (Constants.UI.WIDTH - horizontalPlaygroundMarginValue * 2.0) / Constants.Playground.COL_COUNT
+
+    fun getScaleValueByAbsolute(initialWidth: Double, settingWidth: Double): Double {
+        return settingWidth / initialWidth
+    }
+
+    val h1: Double = cellSize * .75
+    val h2: Double = cellSize * .55
+    val h3: Double = cellSize * .35
 }

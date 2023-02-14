@@ -30,6 +30,7 @@ import domain.upcoming.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import presentation.adapters.*
+import presentation.popup.*
 
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
@@ -51,118 +52,124 @@ class PlayScene() : Scene() {
     var upcomingBlocks = UpcomingBlocks()
 
     override suspend fun SContainer.sceneMain() {
-
-        text(playgroundManager.state.value.animationState.toString()) {
-            playgroundManager.state.onEach {
-                text = it.animationState.toString()
-            }.launchIn(CoroutineScope(Dispatchers.Default))
-        }
-
-        topBar = fixedSizeContainer(
-            width = Constants.UI.WIDTH,
-            height = 100,
-        ) {
-
-            // Current Score
-            text(
-                text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.score),
-                textSize = 60.0,
-                font = DefaultFontFamily.font,
-            ) {
-                scoreManager.state.onEach {
-                    text = ScoreTextAdapter.getTextByScore(it.score)
-                    centerOn(this.parent ?: this.containerRoot)
-                }.launchIn(CoroutineScope(Dispatchers.Default))
-            }
-        }
-        // Best Score
         container {
-            val bestScoreContainer = this
-            val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
-                scale = .02
-            }
 
-            text(
-                text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
-                textSize = 35.0,
-            ) {
-                alignLeftToRightOf(crownIcon, 7.0)
-                positionY(13)
-                scoreManager.state.onEach {
-                    text = ScoreTextAdapter.getTextByScore(it.bestScore)
-                    alignLeftToRightOf(crownIcon, 6.0)
-                    bestScoreContainer.alignRightToRightOf(topBar!!, 15)
+            text(playgroundManager.state.value.animationState.toString()) {
+                playgroundManager.state.onEach {
+                    text = it.animationState.toString()
                 }.launchIn(CoroutineScope(Dispatchers.Default))
             }
-            alignRightToRightOf(topBar!!, 15)
-            alignTopToTopOf(topBar!!, 5)
-        }
 
-        playgroundBgColumns = drawBgColumns()
+            topBar = fixedSizeContainer(
+                width = Constants.UI.WIDTH,
+                height = 100,
+            ) {
 
-        setOnEndAnimationHandlers()
-        playgroundManager.addOnStaticStateListener {
-            levelManager.playground = playgroundManager.state.value.playground
-            levelManager.upgradeLevelIfNeeded()
-        }
-
-        playgroundManager.addOnCollapsedStateListener {
-            scoreManager.playground = playgroundManager.state.value.playground
-            scoreManager.updateScore()
-        }
-        // show Cascade
-        playgroundManager.addOnCascadeListener { cascadeCount ->
-            launchImmediately {
-                showWowCascadeContainer(cascadeCount)
+                // Current Score
+                text(
+                    text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.score),
+                    textSize = 60.0,
+                    font = DefaultFontFamily.font,
+                ) {
+                    scoreManager.state.onEach {
+                        text = ScoreTextAdapter.getTextByScore(it.score)
+                        centerOn(this.parent ?: this.containerRoot)
+                    }.launchIn(CoroutineScope(Dispatchers.Default))
+                }
             }
-        }
-
-        // !!TODO launch only if animationState changed
-        playgroundManager.state.debounce(20).onEach { state ->
-
-            updateUIBlockState()
-            when (state.animationState) {
-                AnimationState.NEW_BLOCK_PLACING,
-                AnimationState.STATIC, -> redrawPlayground()
-                AnimationState.BLOCKS_COLLAPSING -> {
-                    blocks.forEach { it.value.collapseIfNeeded() }
+            // Best Score
+            container {
+                val bestScoreContainer = this
+                val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
+                    scale = .02
                 }
-                AnimationState.BLOCKS_MOVING -> {
-                    blocks.forEach { it.value.moveIfNeeded() }
+
+                text(
+                    text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
+                    textSize = 35.0,
+                ) {
+                    alignLeftToRightOf(crownIcon, 7.0)
+                    positionY(13)
+                    scoreManager.state.onEach {
+                        text = ScoreTextAdapter.getTextByScore(it.bestScore)
+                        alignLeftToRightOf(crownIcon, 6.0)
+                        bestScoreContainer.alignRightToRightOf(topBar!!, 15)
+                    }.launchIn(CoroutineScope(Dispatchers.Default))
                 }
-                AnimationState.BLOCKS_REMOVING ->
-                    {
+                alignRightToRightOf(topBar!!, 15)
+                alignTopToTopOf(topBar!!, 5)
+            }
+
+            playgroundBgColumns = drawBgColumns()
+
+            setOnEndAnimationHandlers()
+            playgroundManager.addOnStaticStateListener {
+                levelManager.playground = playgroundManager.state.value.playground
+                levelManager.upgradeLevelIfNeeded()
+            }
+
+            playgroundManager.addOnCollapsedStateListener {
+                scoreManager.playground = playgroundManager.state.value.playground
+                scoreManager.updateScore()
+            }
+            // show Cascade
+            playgroundManager.addOnCascadeListener { cascadeCount ->
+                launchImmediately {
+                    showWowCascadeContainer(cascadeCount)
+                }
+            }
+
+            // !!TODO launch only if animationState changed
+            playgroundManager.state.debounce(20).onEach { state ->
+
+                updateUIBlockState()
+                when (state.animationState) {
+                    AnimationState.NEW_BLOCK_PLACING,
+                    AnimationState.STATIC,
+                    -> redrawPlayground()
+
+                    AnimationState.BLOCKS_COLLAPSING -> {
+                        blocks.forEach { it.value.collapseIfNeeded() }
+                    }
+
+                    AnimationState.BLOCKS_MOVING -> {
+                        blocks.forEach { it.value.moveIfNeeded() }
+                    }
+
+                    AnimationState.BLOCKS_REMOVING -> {
                         redrawPlayground()
                         blocks.forEach { it.value.removeIfNeeded() }
                     }
-            }
-        }.launchIn(CoroutineScope(Dispatchers.Default))
+                }
+            }.launchIn(CoroutineScope(Dispatchers.Default))
 
-        levelManager.state.onEach {
-            println("Setting new min upcoming value: ${it.level}")
-            upcomingValuesManager.updateLevelUpcomingValues(it.level)
-            playgroundManager.removeBlocksByMinPower(it.level)
-        }.launchIn(CoroutineScope(Dispatchers.Default))
+            levelManager.state.onEach {
+                println("Setting new min upcoming value: ${it.level}")
+                upcomingValuesManager.updateLevelUpcomingValues(it.level)
+                playgroundManager.removeBlocksByMinPower(it.level)
+            }.launchIn(CoroutineScope(Dispatchers.Default))
 
-        // upcomingValues UI
-        val upcomingValues = upcomingValuesManager.state.value.upcomingValues
+            // upcomingValues UI
+            val upcomingValues = upcomingValuesManager.state.value.upcomingValues
 
-        upcomingBlocks.setAlignUnderContainer(playgroundBgColumns!!)
-        upcomingBlocks.addTo(this)
-        upcomingBlocks.drawUpcomingValues(
-            firstValue = upcomingValues[0],
-            secondValue = upcomingValues[1],
-        )
-
-        upcomingValuesManager.addOnGenerateUpcomingValuesListener {
-            upcomingBlocks.rotateValues(
-                firstValue = upcomingValuesManager.state.value.upcomingValues[0],
-                secondValue = upcomingValuesManager.state.value.upcomingValues[1]
+            upcomingBlocks.setAlignUnderContainer(playgroundBgColumns!!)
+            upcomingBlocks.addTo(this)
+            upcomingBlocks.drawUpcomingValues(
+                firstValue = upcomingValues[0],
+                secondValue = upcomingValues[1],
             )
+
+            upcomingValuesManager.addOnGenerateUpcomingValuesListener {
+                upcomingBlocks.rotateValues(
+                    firstValue = upcomingValuesManager.state.value.upcomingValues[0],
+                    secondValue = upcomingValuesManager.state.value.upcomingValues[1]
+                )
+            }
         }
+        outOfMovesPopup()
     }
 
-    private suspend fun SContainer.showWowCascadeContainer(cascadeCount: Int) {
+    private suspend fun Container.showWowCascadeContainer(cascadeCount: Int) {
         val wowText: String? = when (cascadeCount) {
             3 -> "WOW!"
             4 -> "PERFECT!"
@@ -222,7 +229,7 @@ class PlayScene() : Scene() {
         }
     }
 
-    private fun SContainer.drawBgColumns(): Container {
+    private fun Container.drawBgColumns(): Container {
         return container {
             alignTopToBottomOf(topBar ?: containerRoot)
             positionX(SizeAdapter.horizontalPlaygroundMarginValue)
@@ -244,6 +251,7 @@ class PlayScene() : Scene() {
             }
         }
     }
+
     private fun setOnEndAnimationHandlers() {
 
         onNewBlockAnimationFinishedFlag.debounce(100).onEach { flag ->
@@ -275,8 +283,8 @@ class PlayScene() : Scene() {
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
-    fun SContainer.redrawPlayground() {
-
+    fun Container.redrawPlayground() {
+        zIndex(10)
         blocks = mutableMapOf()
         val newPlayground = container {
             alignTopToBottomOf(topBar ?: containerRoot)
