@@ -1,17 +1,20 @@
 package presentation.popup
 
 import Constants
-import com.soywiz.klock.*
-import com.soywiz.korge.animate.*
-import com.soywiz.korge.input.*
+import com.soywiz.klock.TimeSpan
+import com.soywiz.korge.animate.animate
+import com.soywiz.korge.animate.block
+import com.soywiz.korge.animate.hide
+import com.soywiz.korge.input.onClick
 import com.soywiz.korge.view.*
-import com.soywiz.korim.vector.*
-import com.soywiz.korim.vector.format.*
-import com.soywiz.korio.async.*
-import com.soywiz.korio.file.std.*
-import kotlinx.coroutines.*
-import presentation.*
-import presentation.adapters.*
+import com.soywiz.korim.vector.format.SVG
+import com.soywiz.korim.vector.render
+import com.soywiz.korim.vector.scaled
+import com.soywiz.korio.async.launchImmediately
+import com.soywiz.korio.file.std.resourcesVfs
+import kotlinx.coroutines.Dispatchers
+import presentation.StyledColors
+import presentation.adapters.SizeAdapter
 
 class PopupContainer(var content: View) : Container() {
     init {
@@ -32,14 +35,15 @@ class PopupContainer(var content: View) : Container() {
                 fill = StyledColors.theme.popupBg,
                 strokeThickness = 5.0,
                 stroke = StyledColors.theme.popupStroke
-            ).also {
+            ) {
                 // empty onClick to prevent event handling from parent
-                it.onClick { }
-                it.centerOn(this.parent ?: containerRoot)
+                onClick { }
+                centerOn(this.parent ?: containerRoot)
+                content.addTo(this)
+                scaledHeight = content.height + SizeAdapter.marginXL
                 launchImmediately(Dispatchers.Default) {
                     val svg = SVG(resourcesVfs["icons/close.svg"].readString())
                     svg.scaled(SizeAdapter.getScaleValueByAbsolute(svg.dwidth, SizeAdapter.cellSize / 1.5))
-                    content.addTo(it)
                     image(svg.render(true)) {
                         alignTopToTopOf(other = parent!!, padding = SizeAdapter.cellSize / 5)
                         alignRightToRightOf(other = parent!!, padding = SizeAdapter.cellSize / 5)
