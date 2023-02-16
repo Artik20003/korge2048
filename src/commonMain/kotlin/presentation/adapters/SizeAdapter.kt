@@ -26,6 +26,8 @@ object SizeAdapter {
     val h1: Double = cellSize * .75
     val h2: Double = cellSize * .55
     val h3: Double = cellSize * .35
+    val h4: Double = cellSize * .25
+    val h5: Double = cellSize * .15
 
     val cornerRadius = cellSize * .17
     val borderStroke = cellSize * .05

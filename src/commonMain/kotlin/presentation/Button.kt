@@ -5,24 +5,33 @@ import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import presentation.adapters.*
 
-fun Container.button(text: String, callback: () -> Unit) =
+fun Container.button(text: String, type: Button.ButtonType = Button.ButtonType.DEFAULT, callback: () -> Unit) =
     Button(
         text = text,
+        type = type,
         callback = callback
     ).addTo(this)
 
 class Button(
     val text: String,
     val callback: () -> Unit,
+    val type: ButtonType = ButtonType.DEFAULT
 ) : Container() {
 
     init {
+
+        val fill = when (type) {
+            ButtonType.DEFAULT -> Colors.TRANSPARENT_WHITE
+            ButtonType.AGREE -> Colors["#1d7656"]
+            ButtonType.DISAGREE -> Colors["#ea5165"]
+        }
+
         val cellSize = SizeAdapter.cellSize
         roundRect(
             width = cellSize * 2.5,
             height = cellSize / 2,
             rx = SizeAdapter.cellSize * .05,
-            fill = Colors.TRANSPARENT_WHITE,
+            fill = fill,
             stroke = Colors.WHITE,
             strokeThickness = SizeAdapter.borderStroke
         ) {
@@ -36,5 +45,11 @@ class Button(
                 centerOn(this.parent!!)
             }
         }
+    }
+
+    enum class ButtonType {
+        DEFAULT,
+        AGREE,
+        DISAGREE,
     }
 }
