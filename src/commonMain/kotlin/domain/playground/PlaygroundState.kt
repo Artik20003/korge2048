@@ -1,4 +1,5 @@
 package domain.playground
+import Constants
 import com.soywiz.korio.util.*
 import kotlin.collections.set
 
@@ -7,47 +8,50 @@ data class PlaygroundState(
     val playground: Playground = Playground(
         blocks = listOf(
             mutableListOf(
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
+            ),
+            mutableListOf(
+
                 PlaygroundBlock(power = 8),
                 PlaygroundBlock(power = 7),
-                PlaygroundBlock(power = 6),
-                PlaygroundBlock(power = 5),
-                PlaygroundBlock(power = 4),
-                PlaygroundBlock(power = 3),
-                PlaygroundBlock(power = 2),
-            ),
-            mutableListOf(
-                /*
+                PlaygroundBlock(power = 8),
                 PlaygroundBlock(power = 7),
-                PlaygroundBlock(power = 6),
-                PlaygroundBlock(power = 5),
-                PlaygroundBlock(power = 4),
-                PlaygroundBlock(power = 3),
-                PlaygroundBlock(power = 2),
-
-                 */
-            ),
-            mutableListOf(
-
-                PlaygroundBlock(power = 6),
-                PlaygroundBlock(power = 5),
-                PlaygroundBlock(power = 4),
-                PlaygroundBlock(power = 3),
-                PlaygroundBlock(power = 2),
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 7),
 
             ),
             mutableListOf(
-                /*
+
                 PlaygroundBlock(power = 5),
                 PlaygroundBlock(power = 4),
-                PlaygroundBlock(power = 3),
-                PlaygroundBlock(power = 2),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
 
-                 */
+            ),
+            mutableListOf(
+
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 7),
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 7),
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 7),
+
             ),
             mutableListOf(
                 PlaygroundBlock(power = 5),
                 PlaygroundBlock(power = 4),
-                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
             ),
         ),
     ),
@@ -80,6 +84,11 @@ data class PlaygroundState(
                 val hasRemovingState = it.find { it.removingState == true }
                 hasRemovingState != null
             }.contains(true)
+
+    val isPlaygroundFullOfBlocks: Boolean
+        get() = !playground.blocks.map {
+            it.size == Constants.Playground.ROW_COUNT
+        }.contains(false)
 
     init {
         if (playgroundBlocksAnimatingState.isEmpty()) {

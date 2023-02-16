@@ -106,6 +106,7 @@ class PlayScene() : Scene() {
             playgroundManager.addOnStaticStateListener {
                 levelManager.playground = playgroundManager.state.value.playground
                 levelManager.upgradeLevelIfNeeded()
+                playgroundManager.checkEndOfGame(upcomingValuesManager.state.value.upcomingValues[0])
             }
 
             playgroundManager.addOnCollapsedStateListener {
@@ -117,6 +118,10 @@ class PlayScene() : Scene() {
                 launchImmediately {
                     showWowCascadeContainer(cascadeCount)
                 }
+            }
+
+            playgroundManager.addOnEndOfGameListener {
+                outOfMovesPopup()
             }
 
             // !!TODO launch only if animationState changed
@@ -166,7 +171,6 @@ class PlayScene() : Scene() {
                 )
             }
         }
-        outOfMovesPopup()
     }
 
     private suspend fun Container.showWowCascadeContainer(cascadeCount: Int) {

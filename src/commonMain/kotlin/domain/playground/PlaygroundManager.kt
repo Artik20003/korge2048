@@ -10,9 +10,14 @@ class PlaygroundManager {
     private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
     private var cascadeHandlerList: MutableList<(cascadeCount: Int) -> Unit> = mutableListOf()
     private var collapsedHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private var endOfGameHandlerList: MutableList<() -> Unit> = mutableListOf()
 
     fun addOnStaticStateListener(handler: () -> Unit) {
         staticHandlerList.add(handler)
+    }
+
+    private fun launchOnStaticStateHandlers() {
+        staticHandlerList.forEach { it() }
     }
 
     fun addOnCollapsedStateListener(handler: () -> Unit) {
@@ -23,16 +28,20 @@ class PlaygroundManager {
         collapsedHandlerList.forEach { it() }
     }
 
-    private fun launchOnStaticStateHandlers() {
-        staticHandlerList.forEach { it() }
-    }
-
     fun addOnCascadeListener(handler: (cascadeCount: Int) -> Unit) {
         cascadeHandlerList.add(handler)
     }
 
     private fun launchOnCascadeHandlers() {
         cascadeHandlerList.forEach { it(state.value.currentCascadeCount) }
+    }
+
+    fun addOnEndOfGameListener(handler: () -> Unit) {
+        endOfGameHandlerList.add(handler)
+    }
+
+    private fun launchOnEndOfGameHandlers() {
+        endOfGameHandlerList.forEach { it() }
     }
 
     fun push(column: Int, power: Int, callback: () -> Unit) {
@@ -125,6 +134,18 @@ class PlaygroundManager {
         }
 
         state.value = state.value.copy(animationState = animationState)
+    }
+
+    fun checkEndOfGame(nextUpcomingValue: Int) {
+        if (!state.value.isPlaygroundFullOfBlocks)
+            return
+
+        val hasBlockToCollapseWithUpcoming = state.value.playground.blocks.map {
+            it.last().power == nextUpcomingValue
+        }.contains(true)
+
+        if (!hasBlockToCollapseWithUpcoming)
+            launchOnEndOfGameHandlers()
     }
 
     private fun blockExists(column: Int, row: Int): Boolean =

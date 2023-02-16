@@ -11,7 +11,7 @@ fun Container.restartPopup() {
 class RestartPopup() : PopupContent() {
 
     override fun onParentChanged() {
-        if (popupContainer == null) return
+        val popupContainer = this.popupContainer ?: return
         super.onParentChanged()
 
         this.parent?.let { parentContainer ->
@@ -42,13 +42,16 @@ class RestartPopup() : PopupContent() {
             val noBtn = button(
                 text = "NO",
                 type = Button.ButtonType.AGREE,
-                callback = { popupContainer!!.hide() }
+                callback = {
+                    popupContainer.hide()
+                    outOfMovesPopup()
+                }
             ).centerXOn(parentContainer).alignTopToBottomOf(text2, SizeAdapter.marginL)
 
             button(
                 text = "YES",
                 type = Button.ButtonType.DISAGREE,
-                callback = {}
+                callback = { }
             ).centerXOn(parentContainer).alignTopToBottomOf(noBtn, SizeAdapter.marginS)
         }
     }
