@@ -1,8 +1,8 @@
 package domain.playground
 import Constants
 import com.soywiz.korio.util.*
-import kotlin.collections.set
 import kotlinx.coroutines.flow.*
+import kotlin.collections.set
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -83,8 +83,6 @@ class PlaygroundManager {
         )
         preparePlaygroundForCollapsing()
         callback()
-
-        // updatePlaygroundAnimationState()
     }
 
     fun setAnimationState(animationState: AnimationState) {

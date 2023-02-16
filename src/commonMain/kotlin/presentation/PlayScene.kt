@@ -3,6 +3,7 @@ package presentation
 import Constants
 import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
+import com.soywiz.korge.input.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
 import com.soywiz.korge.view.*
@@ -35,12 +36,12 @@ import presentation.popup.*
 @OptIn(FlowPreview::class)
 class PlayScene() : Scene() {
 
-    val playgroundManager: PlaygroundManager = PlaygroundManager()
-    val levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
-    val scoreManager: ScoreManager = ScoreManager(
+    var playgroundManager: PlaygroundManager = PlaygroundManager()
+    var levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
+    var scoreManager: ScoreManager = ScoreManager(
         playgroundManager.state.value.playground, DefaultStorage.storage
     )
-    val upcomingValuesManager: UpcomingValuesManager = UpcomingValuesManager()
+    var upcomingValuesManager: UpcomingValuesManager = UpcomingValuesManager()
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -170,7 +171,35 @@ class PlayScene() : Scene() {
                     secondValue = upcomingValuesManager.state.value.upcomingValues[1]
                 )
             }
+            container {
+                val container = this
+                roundRect(
+                    width = SizeAdapter.cellSize,
+                    height = SizeAdapter.cellSize,
+                    rx = SizeAdapter.cellSize * .17,
+                    strokeThickness = SizeAdapter.borderStroke,
+                    fill = PlayBlockColor.getColorByPower(1)
+                ) {
+                    val restartSvg = resourcesVfs["icons/restart.svg"].readSVG()
+                    val restartDrawable = restartSvg.scaled(
+                        SizeAdapter.getScaleValueByAbsolute(
+                            initialWidth = restartSvg.width.toDouble(),
+                            settingWidth = SizeAdapter.cellSize * .75
+                        )
+                    )
+
+                    image(texture = restartDrawable.render()) {
+                        centerOn(this.parent!!)
+                        onClick {
+                            container.restartGame()
+                        }
+                    }
+                }
+            }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
         }
+    }
+    private suspend fun Container.restartGame() {
+        sceneContainer.changeTo({ PlayScene() })
     }
 
     private suspend fun Container.showWowCascadeContainer(cascadeCount: Int) {
