@@ -10,30 +10,33 @@ import presentation.*
 import presentation.adapters.*
 
 fun Container.outOfMovesPopup() {
-    PopupContainer(OutOfMovesPopup()).addTo(this)
+    PopupContainer(OutOfMovesPopup()).addTo(containerRoot)
 }
 
-class OutOfMovesPopup : Container() {
+class OutOfMovesPopup() : PopupContent() {
 
     override fun onParentChanged() {
+        println("popupContainer")
+        println(popupContainer)
+        if (popupContainer == null) return
         super.onParentChanged()
 
-        this.parent?.let { popupContainer ->
+        this.parent?.let { parentContainer ->
 
             val h1 = text(
                 text = "Out of Moves!",
                 textSize = SizeAdapter.h2,
                 font = DefaultFontFamily.font,
             ) {
-                alignTopToTopOf(popupContainer, SizeAdapter.marginM)
-                centerXOn(popupContainer)
+                alignTopToTopOf(parentContainer, SizeAdapter.marginM)
+                centerXOn(parentContainer)
             }
 
             val h2 = text(
                 text = "Keep playing?",
                 textSize = SizeAdapter.h3,
                 font = DefaultFontFamily.font,
-            ).centerXOn(popupContainer).alignTopToBottomOf(h1)
+            ).centerXOn(parentContainer).alignTopToBottomOf(h1)
 
             val roundRect = roundRect(
                 width = SizeAdapter.cellSize,
@@ -43,7 +46,7 @@ class OutOfMovesPopup : Container() {
                 strokeThickness = SizeAdapter.borderStroke
 
             ) {
-                centerXOn(popupContainer)
+                centerXOn(parentContainer)
                 alignTopToBottomOf(h2, SizeAdapter.marginL)
                 launchImmediately(Dispatchers.Default) {
                     val svg = resourcesVfs["/icons/crown.svg"].readSVG()
@@ -54,14 +57,15 @@ class OutOfMovesPopup : Container() {
                 }
             }
             button(
-                    text = "No Thanks",
-                    callback = {}
-                )
+                text = "No Thanks",
+                callback = {
+                    popupContainer!!.hide()
+                    restartPopup()
+                }
+            )
                 .alignTopToBottomOf(this.parent!!)
                 .centerXOn(roundRect)
                 .alignTopToBottomOf(roundRect, SizeAdapter.marginXL)
-
-
         }
     }
 }

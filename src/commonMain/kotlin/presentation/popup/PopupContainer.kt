@@ -1,23 +1,21 @@
 package presentation.popup
 
 import Constants
-import com.soywiz.klock.TimeSpan
-import com.soywiz.korge.animate.animate
-import com.soywiz.korge.animate.block
-import com.soywiz.korge.animate.hide
-import com.soywiz.korge.input.onClick
+import com.soywiz.klock.*
+import com.soywiz.korge.animate.*
+import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
-import com.soywiz.korim.vector.format.SVG
-import com.soywiz.korim.vector.render
-import com.soywiz.korim.vector.scaled
-import com.soywiz.korio.async.launchImmediately
-import com.soywiz.korio.file.std.resourcesVfs
-import kotlinx.coroutines.Dispatchers
-import presentation.StyledColors
-import presentation.adapters.SizeAdapter
+import com.soywiz.korim.vector.*
+import com.soywiz.korim.vector.format.*
+import com.soywiz.korio.async.*
+import com.soywiz.korio.file.std.*
+import kotlinx.coroutines.*
+import presentation.*
+import presentation.adapters.*
 
-class PopupContainer(var content: View) : Container() {
+class PopupContainer(var content: PopupContent) : PopupContent() {
     init {
+        val popupContainer = this
         zIndex(200)
         solidRect(
             width = Constants.UI.WIDTH,
@@ -39,6 +37,7 @@ class PopupContainer(var content: View) : Container() {
                 // empty onClick to prevent event handling from parent
                 onClick { }
                 centerOn(this.parent ?: containerRoot)
+                content.popupContainer = popupContainer
                 content.addTo(this)
                 scaledHeight = content.height + SizeAdapter.marginXL
                 launchImmediately(Dispatchers.Default) {
