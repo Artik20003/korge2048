@@ -51,6 +51,7 @@ class PlayScene() : Scene() {
     var playgroundBgColumns: Container? = null
     var topBar: Container? = null
     var upcomingBlocks = UpcomingBlocks()
+    var endOfGamePopup: Container = Container()
 
     override suspend fun SContainer.sceneMain() {
         container {
@@ -196,8 +197,10 @@ class PlayScene() : Scene() {
                     }
                 }
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
+            showEndOfGamePopup()
         }
     }
+
     private suspend fun Container.restartGame() {
         sceneContainer.changeTo({ PlayScene() })
     }
@@ -374,6 +377,83 @@ class PlayScene() : Scene() {
             blocks[block.id]?.onNewBlockAnimationFinished = { onNewBlockAnimationFinishedFlag.value = true }
             blocks[block.id]?.onCollapseBlockAnimationFinished = { onCollapseBlockAnimationFinishedFlag.value = true }
             blocks[block.id]?.onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true }
+        }
+    }
+
+    fun Container.showEndOfGamePopup() {
+        zIndex = 100.0
+        endOfGamePopup = container {
+
+            solidRect(
+                width = containerRoot.width,
+                height = containerRoot.height,
+                color = Colors["#222222EE"]
+            )
+            container {
+                val gameOverText = text(
+                    text = "Game Over!",
+                    textSize = SizeAdapter.h1,
+                    font = DefaultFontFamily.font
+                ).centerXOn(this.parent!!)
+
+                val scoreCaptionText = text(
+                    text = "Your score",
+                    textSize = SizeAdapter.h2,
+                    font = DefaultFontFamily.font
+                )
+                    .centerOn(this.parent!!)
+                    .alignTopToBottomOf(gameOverText)
+
+                val scoreText = text(
+                    text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.score),
+                    textSize = SizeAdapter.h2
+
+                )
+                    .centerOn(this.parent!!)
+                    .alignTopToBottomOf(scoreCaptionText, SizeAdapter.marginM)
+                launchImmediately {
+                    val bestScoreContainer = container {
+
+                        val bestScoreSvg = resourcesVfs["icons/solid-crown.svg"].readSVG()
+                        val bestScoreDrawable = bestScoreSvg.scaled(
+                            SizeAdapter.getScaleValueByAbsolute(
+                                initialWidth = bestScoreSvg.width.toDouble(),
+                                settingWidth = SizeAdapter.h3
+                            )
+                        )
+
+                        val bestScoreImage = image(texture = bestScoreDrawable.render()) {}
+
+                        text(
+                            text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
+                            textSize = SizeAdapter.h3
+                        ).alignLeftToRightOf(bestScoreImage, SizeAdapter.marginS)
+                    }
+                        .centerXOn(this.parent!!)
+                        .alignTopToBottomOf(scoreText, SizeAdapter.marginM)
+
+                    button(
+                        text = "Restart",
+                        callback = {
+                            launchImmediately {
+                                this@showEndOfGamePopup.restartGame()
+                                hideEndOfGamePopup()
+                            }
+                        }
+                    )
+                        .centerOn(this.parent!!)
+                        .alignTopToBottomOf(bestScoreContainer, SizeAdapter.marginXL)
+                }
+            }.centerOn(this.parent!!)
+        }
+    }
+
+    private suspend fun hideEndOfGamePopup() {
+        endOfGamePopup.animate {
+            hide(endOfGamePopup)
+            block {
+                endOfGamePopup.removeFromParent()
+            }
         }
     }
 }

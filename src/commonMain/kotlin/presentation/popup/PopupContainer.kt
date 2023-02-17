@@ -15,7 +15,7 @@ import presentation.adapters.*
 
 class PopupContainer(
     var content: PopupContent,
-    var onClose: () -> Unit = {}
+    var onClose: () -> Unit = {},
 ) : PopupContent() {
     init {
         val popupContainer = this
