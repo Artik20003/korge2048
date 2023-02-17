@@ -1,14 +1,26 @@
-package presentation.popup
+package presentation.popup.content
 
+import Event
+import com.soywiz.korge.bus.*
 import com.soywiz.korge.view.*
+import com.soywiz.korio.async.*
+import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
+import presentation.popup.*
 
-fun Container.restartPopup() {
-    PopupContainer(RestartPopup()).addTo(containerRoot)
+fun Container.restartPopup(bus: GlobalBus) {
+    PopupContainer(
+        content = RestartPopup(bus = bus),
+        onClose = {
+            launchImmediately(Dispatchers.Default) {
+                bus.send(Event.GameOver)
+            }
+        }
+    ).addTo(containerRoot)
 }
 
-class RestartPopup() : PopupContent() {
+class RestartPopup(val bus: GlobalBus) : PopupContent() {
 
     override fun onParentChanged() {
         val popupContainer = this.popupContainer ?: return
@@ -44,14 +56,19 @@ class RestartPopup() : PopupContent() {
                 type = Button.ButtonType.AGREE,
                 callback = {
                     popupContainer.hide()
-                    outOfMovesPopup()
+                    outOfMovesPopup(bus)
                 }
             ).centerXOn(parentContainer).alignTopToBottomOf(text2, SizeAdapter.marginL)
 
             button(
                 text = "YES",
                 type = Button.ButtonType.DISAGREE,
-                callback = { }
+                callback = {
+                    launchImmediately(Dispatchers.Default) {
+                        popupContainer.hide()
+                        bus.send(Event.GameOver)
+                    }
+                }
             ).centerXOn(parentContainer).alignTopToBottomOf(noBtn, SizeAdapter.marginS)
         }
     }

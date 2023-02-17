@@ -1,5 +1,7 @@
-package presentation.popup
+package presentation.popup.content
 
+import Event
+import com.soywiz.korge.bus.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.vector.*
 import com.soywiz.korim.vector.format.*
@@ -8,12 +10,20 @@ import com.soywiz.korio.file.std.*
 import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
+import presentation.popup.*
 
-fun Container.outOfMovesPopup() {
-    PopupContainer(OutOfMovesPopup()).addTo(containerRoot)
+fun Container.outOfMovesPopup(bus: GlobalBus) {
+    PopupContainer(
+        content = OutOfMovesPopup(bus = bus),
+        onClose = {
+            launchImmediately(Dispatchers.Default) {
+                bus.send(Event.GameOver)
+            }
+        }
+    ).addTo(containerRoot)
 }
 
-class OutOfMovesPopup() : PopupContent() {
+class OutOfMovesPopup(val bus: GlobalBus) : PopupContent() {
 
     override fun onParentChanged() {
         println("popupContainer")
@@ -60,7 +70,7 @@ class OutOfMovesPopup() : PopupContent() {
                 text = "No Thanks",
                 callback = {
                     popupContainer!!.hide()
-                    restartPopup()
+                    restartPopup(bus)
                 }
             )
                 .alignTopToBottomOf(this.parent!!)

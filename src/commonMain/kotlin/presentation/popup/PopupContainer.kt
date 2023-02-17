@@ -27,7 +27,7 @@ class PopupContainer(
 
         ) {
             onClick {
-                hide()
+                close()
             }
             roundRect(
                 width = SizeAdapter.cellSize * Constants.Playground.COL_COUNT,
@@ -49,11 +49,16 @@ class PopupContainer(
                     image(svg.render(true)) {
                         alignTopToTopOf(other = parent!!, padding = SizeAdapter.cellSize / 5)
                         alignRightToRightOf(other = parent!!, padding = SizeAdapter.cellSize / 5)
-                        onClick { hide() }
+                        onClick { close() }
                     }
                 }
             }
         }
+    }
+
+    fun close() {
+        hide()
+        onClose()
     }
 
     fun hide() {
@@ -71,6 +76,5 @@ class PopupContainer(
                 }
             }
         }
-        onClose()
     }
 }

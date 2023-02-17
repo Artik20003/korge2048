@@ -1,11 +1,13 @@
 
 import com.soywiz.korge.*
+import com.soywiz.korge.bus.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
 import com.soywiz.korim.font.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korma.geom.*
 import data.*
+import kotlinx.coroutines.*
 import presentation.*
 
 suspend fun main() = Korge(
@@ -22,6 +24,7 @@ suspend fun main() = Korge(
     DefaultStorage.storage = views.storage
 
     val sceneContainer = sceneContainer()
+    val bus = GlobalBus(Dispatchers.Default)
 
-    sceneContainer.changeTo({ PlayScene() })
+    sceneContainer.changeTo({ PlayScene(bus = bus) })
 }

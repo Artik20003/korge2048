@@ -1,8 +1,10 @@
 package presentation
 
 import Constants
+import Event
 import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
+import com.soywiz.korge.bus.*
 import com.soywiz.korge.input.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
@@ -32,9 +34,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import presentation.adapters.*
 import presentation.popup.*
+import presentation.popup.content.*
 
 @OptIn(FlowPreview::class)
-class PlayScene() : Scene() {
+class PlayScene(val bus: GlobalBus) : Scene() {
 
     var playgroundManager: PlaygroundManager = PlaygroundManager()
     var levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
@@ -54,8 +57,9 @@ class PlayScene() : Scene() {
     var endOfGamePopup: Container = Container()
 
     override suspend fun SContainer.sceneMain() {
+        bus.register<Event.GameOver> { this.showEndOfGamePopup() }
         container {
-
+            text("123345").onClick { restartPopup(bus = bus) }
             text(playgroundManager.state.value.animationState.toString()) {
                 playgroundManager.state.onEach {
                     text = it.animationState.toString()
@@ -123,7 +127,7 @@ class PlayScene() : Scene() {
             }
 
             playgroundManager.addOnEndOfGameListener {
-                outOfMovesPopup()
+                outOfMovesPopup(bus)
             }
 
             // !!TODO launch only if animationState changed
@@ -197,12 +201,11 @@ class PlayScene() : Scene() {
                     }
                 }
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
-            showEndOfGamePopup()
         }
     }
 
     private suspend fun Container.restartGame() {
-        sceneContainer.changeTo({ PlayScene() })
+        sceneContainer.changeTo({ PlayScene(bus) })
     }
 
     private suspend fun Container.showWowCascadeContainer(cascadeCount: Int) {
@@ -381,8 +384,9 @@ class PlayScene() : Scene() {
     }
 
     fun Container.showEndOfGamePopup() {
-        zIndex = 100.0
+
         endOfGamePopup = container {
+            zIndex = 100.0
 
             solidRect(
                 width = containerRoot.width,
@@ -444,7 +448,7 @@ class PlayScene() : Scene() {
                         .centerOn(this.parent!!)
                         .alignTopToBottomOf(bestScoreContainer, SizeAdapter.marginXL)
                 }
-            }.centerOn(this.parent!!)
+            }.centerOnStage()
         }
     }
 
