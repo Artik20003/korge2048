@@ -58,6 +58,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
 
     override suspend fun SContainer.sceneMain() {
         bus.register<Event.GameOver> { this.showEndOfGamePopup() }
+        val sceneMain = this
         container {
             text("123345").onClick { restartPopup(bus = bus) }
             text(playgroundManager.state.value.animationState.toString()) {
@@ -177,7 +178,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 )
             }
             container {
-                val container = this
+
                 roundRect(
                     width = SizeAdapter.cellSize,
                     height = SizeAdapter.cellSize,
@@ -195,8 +196,9 @@ class PlayScene(val bus: GlobalBus) : Scene() {
 
                     image(texture = restartDrawable.render()) {
                         centerOn(this.parent!!)
+
                         onClick {
-                            container.restartGame()
+                            sceneMain.restartPopup(bus)
                         }
                     }
                 }
