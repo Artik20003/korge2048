@@ -15,6 +15,7 @@ fun Container.playgroundBlock(
     power: Int,
     animationState: PlayBlockAnimationState,
     playgroundAnimationState: AnimationState,
+    isHighest: Boolean = false,
     targetPower: Int? = null,
     collapsingState: PlaygroundBlock.ChangingState? = null,
     movingState: PlaygroundBlock.ChangingState? = null,
@@ -30,6 +31,7 @@ fun Container.playgroundBlock(
         power = power,
         animationState = animationState,
         playgroundAnimationState = playgroundAnimationState,
+        isHighest = isHighest,
         targetPower = targetPower,
         collapsingState = collapsingState,
         movingState = movingState,
@@ -46,6 +48,7 @@ class UIPlaygroundBlock(
     var power: Int,
     var animationState: PlayBlockAnimationState,
     var playgroundAnimationState: AnimationState,
+    var isHighest: Boolean = false,
     var targetPower: Int? = null,
     var collapsingState: PlaygroundBlock.ChangingState? = null,
     var movingState: PlaygroundBlock.ChangingState? = null,
@@ -67,7 +70,7 @@ class UIPlaygroundBlock(
 
         container {
             if (!isExtraRowPlacing) {
-                block(power = power, cellSize = cellSize)
+                block(power = power, cellSize = cellSize, isHighest = isHighest)
                 // text(animationState.toString())
             }
         }

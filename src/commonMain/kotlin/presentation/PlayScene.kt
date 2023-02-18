@@ -337,6 +337,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     power = block.power,
                     animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
                         .animatingState,
+                    isHighest =
+                    block.power == playgroundManager.state.value.highestBlockPower,
                     targetPower = block.targetPower,
                     collapsingState = block.collapsingState,
                     movingState = block.movingState,

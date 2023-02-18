@@ -8,6 +8,22 @@ data class PlaygroundState(
     val playground: Playground = Playground(
         blocks = listOf(
             mutableListOf(
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 7),
+                PlaygroundBlock(power = 6),
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 2),
+            ),
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+
+            /*
+            //GAME OVER TEST
+            mutableListOf(
                 PlaygroundBlock(power = 5),
                 PlaygroundBlock(power = 4),
                 PlaygroundBlock(power = 5),
@@ -53,6 +69,8 @@ data class PlaygroundState(
                 PlaygroundBlock(power = 5),
                 PlaygroundBlock(power = 4),
             ),
+            //END OF GAME OVER TEST
+             */
         ),
     ),
 
@@ -89,6 +107,11 @@ data class PlaygroundState(
         get() = !playground.blocks.map {
             it.size == Constants.Playground.ROW_COUNT
         }.contains(false)
+
+    val highestBlockPower: Int
+        get() = playground.blocks.map {
+            it.maxByOrNull { it.power }?.power ?: 0
+        }.maxOrNull() ?: 0
 
     init {
         if (playgroundBlocksAnimatingState.isEmpty()) {
