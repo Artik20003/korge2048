@@ -7,6 +7,17 @@ data class PlaygroundState(
 
     val playground: Playground = Playground(
         blocks = listOf(
+
+            // empty
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            // end of empty
+
+            /*
+            // FOR NEW HIGHEST STATE
             mutableListOf(
                 PlaygroundBlock(power = 8),
                 PlaygroundBlock(power = 7),
@@ -20,7 +31,8 @@ data class PlaygroundState(
             mutableListOf(),
             mutableListOf(),
             mutableListOf(),
-
+            // ENDOF FOR NEW HIGHEST STATE
+            */
             /*
             //GAME OVER TEST
             mutableListOf(

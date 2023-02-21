@@ -48,7 +48,7 @@ class UIPlaygroundBlock(
     var power: Int,
     var animationState: PlayBlockAnimationState,
     var playgroundAnimationState: AnimationState,
-    var isHighest: Boolean = false,
+    isHighest: Boolean = false,
     var targetPower: Int? = null,
     var collapsingState: PlaygroundBlock.ChangingState? = null,
     var movingState: PlaygroundBlock.ChangingState? = null,
@@ -58,11 +58,23 @@ class UIPlaygroundBlock(
     var onMoveBlockAnimationFinished: () -> Unit,
     var onRemoveBlockAnimationFinished: () -> Unit,
 ) : Container() {
-    val cellSize: Double = SizeAdapter.cellSize
-    var playgroundBlock: UIPlaygroundBlock
-    val isExtraRowPlacing = row == Constants.Playground.ROW_COUNT
+    private var block: Block? = null
+    var isHighest: Boolean = isHighest
+        set(value) {
+            if (isHighest != value) {
+                field = value
+                block?.let {
+                    it.isHighest = value
+                    it.redrawBlock()
+                }
+            } else
+                field = value
+        }
+    private val cellSize: Double = SizeAdapter.cellSize
+    private var playgroundBlock: UIPlaygroundBlock = this
+    private val isExtraRowPlacing = row == Constants.Playground.ROW_COUNT
+
     init {
-        playgroundBlock = this
         position(
             x = getXPosition(animationState),
             y = getYPosition(animationState)
@@ -70,10 +82,11 @@ class UIPlaygroundBlock(
 
         container {
             if (!isExtraRowPlacing) {
-                block(power = power, cellSize = cellSize, isHighest = isHighest)
+                block = block(power = power, cellSize = cellSize, isHighest = isHighest)
                 // text(animationState.toString())
             }
         }
+
         if (animationState == PlayBlockAnimationState.BOTTOM) {
             launchImmediately(Dispatchers.Default) {
                 animate {
@@ -127,8 +140,10 @@ class UIPlaygroundBlock(
     fun collapseIfNeeded() {
         collapsingState?.let {
             // draw current block and target on top. Then current will fade out so the target will be seen
-            block(power = targetPower ?: power, cellSize = cellSize)
+            val newBlock = block(power = targetPower ?: power, cellSize = cellSize, isHighest = isHighest)
             val blockToVanish = block(power, cellSize = cellSize)
+            block?.removeFromParent()
+            block = newBlock
 
             launchImmediately(Dispatchers.Default) {
                 animate {
@@ -149,6 +164,7 @@ class UIPlaygroundBlock(
                         )
                     }
                     block {
+                        blockToVanish.removeFromParent()
                         if (col != it.targetCol || row != it.targetRow) {
                             playgroundBlock.removeFromParent()
                         }
