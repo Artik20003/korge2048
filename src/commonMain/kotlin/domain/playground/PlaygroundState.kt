@@ -148,6 +148,7 @@ enum class AnimationState() {
     BLOCKS_MOVING,
     STATIC,
     BLOCKS_REMOVING,
+    HAMMER_SELECTING,
 }
 
 data class PlaygroundBlockAnimatingState(

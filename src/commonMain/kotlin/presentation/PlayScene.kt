@@ -60,7 +60,6 @@ class PlayScene(val bus: GlobalBus) : Scene() {
         bus.register<Event.GameOver> { this.showEndOfGamePopup() }
         val sceneMain = this
         container {
-            text("123345").onClick { restartPopup(bus = bus) }
             text(playgroundManager.state.value.animationState.toString()) {
                 playgroundManager.state.onEach {
                     text = it.animationState.toString()
@@ -71,6 +70,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 width = Constants.UI.WIDTH,
                 height = 100,
             ) {
+                val topBar = this
 
                 // Current Score
                 text(
@@ -83,28 +83,28 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         centerOn(this.parent ?: this.containerRoot)
                     }.launchIn(CoroutineScope(Dispatchers.Default))
                 }
-            }
-            // Best Score
-            container {
-                val bestScoreContainer = this
-                val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
-                    scale = .02
-                }
+                // Best Score
+                container {
+                    val bestScoreContainer = this
+                    val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
+                        scale = .02
+                    }
 
-                text(
-                    text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
-                    textSize = 35.0,
-                ) {
-                    alignLeftToRightOf(crownIcon, 7.0)
-                    positionY(13)
-                    scoreManager.state.onEach {
-                        text = ScoreTextAdapter.getTextByScore(it.bestScore)
-                        alignLeftToRightOf(crownIcon, 6.0)
-                        bestScoreContainer.alignRightToRightOf(topBar!!, 15)
-                    }.launchIn(CoroutineScope(Dispatchers.Default))
+                    text(
+                        text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
+                        textSize = 35.0,
+                    ) {
+                        alignLeftToRightOf(crownIcon, 7.0)
+                        positionY(13)
+                        scoreManager.state.onEach {
+                            text = ScoreTextAdapter.getTextByScore(it.bestScore)
+                            alignLeftToRightOf(crownIcon, 6.0)
+                            bestScoreContainer.alignRightToRightOf(topBar, 15)
+                        }.launchIn(CoroutineScope(Dispatchers.Default))
+                    }
+                    alignRightToRightOf(topBar, 15)
+                    alignTopToTopOf(topBar, 5)
                 }
-                alignRightToRightOf(topBar!!, 15)
-                alignTopToTopOf(topBar!!, 5)
             }
 
             playgroundBgColumns = drawBgColumns()
@@ -190,6 +190,16 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         redrawPlayground()
                         blocks.forEach { it.value.removeIfNeeded() }
                     }
+                    AnimationState.HAMMER_SELECTING -> {
+                        topBar?.visible(false)
+                        blocks.forEach {
+                            val playgroundBlock = it.value
+                            playgroundBlock.onClick {
+                                playgroundManager.removeBlock(playgroundBlock.col, playgroundBlock.row)
+                                playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
+                            }
+                        }
+                    }
                 }
             }.launchIn(CoroutineScope(Dispatchers.Default))
 
@@ -217,7 +227,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
             }
             container {
 
-                roundRect(
+                val restartBtn = roundRect(
                     width = SizeAdapter.cellSize,
                     height = SizeAdapter.cellSize,
                     rx = SizeAdapter.cellSize * .17,
@@ -240,6 +250,32 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         }
                     }
                 }
+                // hammer
+                roundRect(
+                    width = SizeAdapter.cellSize,
+                    height = SizeAdapter.cellSize,
+                    rx = SizeAdapter.cellSize * .17,
+                    strokeThickness = SizeAdapter.borderStroke,
+                    fill = PlayBlockColor.getColorByPower(7)
+                ) {
+
+                    // !TODO make unactive if playground is empty
+                    val hammerSvg = resourcesVfs["icons/hammer.svg"].readSVG()
+                    val hammerDrawable = hammerSvg.scaled(
+                        SizeAdapter.getScaleValueByAbsolute(
+                            initialWidth = hammerSvg.width.toDouble(),
+                            settingWidth = SizeAdapter.cellSize * .75
+                        )
+                    )
+
+                    image(texture = hammerDrawable.render()) {
+                        centerOn(this.parent!!)
+
+                        onClick {
+                            playgroundManager.setAnimationState(AnimationState.HAMMER_SELECTING)
+                        }
+                    }
+                }.alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
         }
     }
