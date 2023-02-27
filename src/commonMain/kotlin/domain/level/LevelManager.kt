@@ -28,7 +28,6 @@ class LevelManager(var playground: Playground) {
         playground.iterateBlocks { col, row, block ->
             print(block.power)
         }
-        println("==")
 
         // end  debug
 

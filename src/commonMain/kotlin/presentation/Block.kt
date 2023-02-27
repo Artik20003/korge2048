@@ -137,7 +137,6 @@ class Block(
                                 )
                             }
                         }
-                        println("vendeta")
                     }
                 }
             }

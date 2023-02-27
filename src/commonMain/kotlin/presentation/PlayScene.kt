@@ -5,6 +5,7 @@ import Event
 import com.soywiz.klock.*
 import com.soywiz.korge.animate.*
 import com.soywiz.korge.bus.*
+import com.soywiz.korge.component.*
 import com.soywiz.korge.input.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.service.storage.*
@@ -19,6 +20,7 @@ import com.soywiz.korim.vector.*
 import com.soywiz.korim.vector.format.*
 import com.soywiz.korio.async.*
 import com.soywiz.korio.file.std.*
+import com.soywiz.korio.lang.*
 import com.soywiz.korio.stream.*
 import com.soywiz.korio.util.*
 import com.soywiz.korma.geom.*
@@ -176,7 +178,9 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 when (state.animationState) {
                     AnimationState.NEW_BLOCK_PLACING,
                     AnimationState.STATIC,
-                    -> redrawPlayground()
+                    -> {
+                        redrawPlayground()
+                    }
 
                     AnimationState.BLOCKS_COLLAPSING -> {
                         blocks.forEach { it.value.collapseIfNeeded() }
@@ -192,10 +196,19 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     }
                     AnimationState.HAMMER_SELECTING -> {
                         topBar?.visible(false)
+
                         blocks.forEach {
                             val playgroundBlock = it.value
+                            playgroundBlock.mouseEnabled = true
                             playgroundBlock.onClick {
+
                                 playgroundManager.removeBlock(playgroundBlock.col, playgroundBlock.row)
+
+                                blocks.values.forEach { block ->
+                                    block.mouse.click.clear()
+                                    block.mouseEnabled = false
+                                    topBar?.visible(true)
+                                }
                                 playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
                             }
                         }

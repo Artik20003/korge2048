@@ -11,6 +11,7 @@ fun Container.clickableColumn(onClick: () -> Unit) = ClickableColumn(onClick).ad
 class ClickableColumn(onClick: () -> Unit) : Container() {
 
     init {
+
         solidRect(
             width = SizeAdapter.columnSize,
             height = SizeAdapter.columnSize * Constants.Playground.ROW_COUNT,
