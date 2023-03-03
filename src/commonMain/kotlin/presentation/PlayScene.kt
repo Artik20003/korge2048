@@ -55,10 +55,17 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     lateinit var playground: Container
     var playgroundBgColumns: Container? = null
     var topBar: Container? = null
+    var bottomMenu: Container = Container()
     var upcomingBlocks = UpcomingBlocks()
     var endOfGamePopup: Container = Container()
+    var hammerContainer: Container = Container()
+    var backButton = BackButton()
 
     override suspend fun SContainer.sceneMain() {
+        backButton = BackButton().addTo(this).position(
+            x = SizeAdapter.horizontalPlaygroundMarginValue,
+            y = SizeAdapter.horizontalPlaygroundMarginValue / 2,
+        )
         bus.register<Event.GameOver> { this.showEndOfGamePopup() }
         val sceneMain = this
         container {
@@ -195,23 +202,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         blocks.forEach { it.value.removeIfNeeded() }
                     }
                     AnimationState.HAMMER_SELECTING -> {
-                        topBar?.visible(false)
-
-                        blocks.forEach {
-                            val playgroundBlock = it.value
-                            playgroundBlock.mouseEnabled = true
-                            playgroundBlock.onClick {
-
-                                playgroundManager.removeBlock(playgroundBlock.col, playgroundBlock.row)
-
-                                blocks.values.forEach { block ->
-                                    block.mouse.click.clear()
-                                    block.mouseEnabled = false
-                                    topBar?.visible(true)
-                                }
-                                playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
-                            }
-                        }
+                        activateHammerSelecting()
                     }
                 }
             }.launchIn(CoroutineScope(Dispatchers.Default))
@@ -238,7 +229,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     secondValue = upcomingValuesManager.state.value.upcomingValues[1]
                 )
             }
-            container {
+            bottomMenu = container {
 
                 val restartBtn = roundRect(
                     width = SizeAdapter.cellSize,
@@ -290,6 +281,41 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     }
                 }.alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
+        }
+    }
+
+    private fun Container.activateHammerSelecting() {
+        topBar?.visible(false)
+        upcomingBlocks.visible(false)
+        bottomMenu.visible(false)
+        hammerContainer = hammerContainer()
+            .alignTopToBottomOf(playground, -SizeAdapter.marginM)
+
+        backButton.activate {
+            playgroundManager.setAnimationState(AnimationState.STATIC)
+            deactivateHammerSelecting()
+        }
+        blocks.forEach {
+            val playgroundBlock = it.value
+            playgroundBlock.mouseEnabled = true
+            playgroundBlock.onClick {
+                playgroundManager.removeBlock(playgroundBlock.col, playgroundBlock.row)
+                playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
+                deactivateHammerSelecting()
+            }
+        }
+    }
+
+    private fun deactivateHammerSelecting() {
+        topBar?.visible(true)
+        backButton.visible(false)
+        upcomingBlocks.visible(true)
+        bottomMenu.visible(true)
+        hammerContainer.removeFromParent()
+
+        blocks.values.forEach { block ->
+            block.mouse.click.clear()
+            block.mouseEnabled = false
         }
     }
 
