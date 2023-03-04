@@ -7,6 +7,8 @@ import com.soywiz.korio.async.*
 import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
+import presentation.buttons.Button
+import presentation.buttons.button
 import presentation.popup.*
 
 fun Container.restartPopup(bus: GlobalBus) {

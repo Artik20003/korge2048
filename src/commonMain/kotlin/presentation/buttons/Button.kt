@@ -1,8 +1,9 @@
-package presentation
+package presentation.buttons
 
 import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
+import presentation.*
 import presentation.adapters.*
 
 fun Container.button(text: String, type: Button.ButtonType = Button.ButtonType.DEFAULT, callback: () -> Unit) =

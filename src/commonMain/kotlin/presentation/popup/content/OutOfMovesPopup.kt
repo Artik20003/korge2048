@@ -10,6 +10,7 @@ import com.soywiz.korio.file.std.*
 import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
+import presentation.buttons.button
 import presentation.popup.*
 
 fun Container.outOfMovesPopup(bus: GlobalBus) {

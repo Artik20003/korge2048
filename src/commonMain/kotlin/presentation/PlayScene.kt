@@ -35,6 +35,7 @@ import domain.upcoming.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import presentation.adapters.*
+import presentation.buttons.*
 import presentation.popup.*
 import presentation.popup.content.*
 
@@ -229,57 +230,28 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     secondValue = upcomingValuesManager.state.value.upcomingValues[1]
                 )
             }
+
             bottomMenu = container {
+                val restartBtn = imageButton(
+                    bgColor = PlayBlockColor.getColorByPower(1),
+                    imageResourcePath = "icons/restart.svg",
+                    imageWidth = SizeAdapter.cellSize * .75,
+                    onClick = { sceneMain.restartPopup(bus) }
+                )
+                val hammerBtn = imageButton(
+                    bgColor = PlayBlockColor.getColorByPower(7),
+                    imageResourcePath = "icons/hammer.svg",
+                    imageWidth = SizeAdapter.cellSize * .75,
+                    onClick = { playgroundManager.setAnimationState(AnimationState.HAMMER_SELECTING) }
+                ).alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
 
-                val restartBtn = roundRect(
-                    width = SizeAdapter.cellSize,
-                    height = SizeAdapter.cellSize,
-                    rx = SizeAdapter.cellSize * .17,
-                    strokeThickness = SizeAdapter.borderStroke,
-                    fill = PlayBlockColor.getColorByPower(1)
-                ) {
-                    val restartSvg = resourcesVfs["icons/restart.svg"].readSVG()
-                    val restartDrawable = restartSvg.scaled(
-                        SizeAdapter.getScaleValueByAbsolute(
-                            initialWidth = restartSvg.width.toDouble(),
-                            settingWidth = SizeAdapter.cellSize * .75
-                        )
-                    )
+                val switchButton = imageButton(
+                    bgColor = PlayBlockColor.getColorByPower(8),
+                    imageResourcePath = "icons/switch-blocks.svg",
+                    imageWidth = SizeAdapter.cellSize * .75,
+                    onClick = {}
+                ).alignLeftToRightOf(hammerBtn, SizeAdapter.marginM)
 
-                    image(texture = restartDrawable.render()) {
-                        centerOn(this.parent!!)
-
-                        onClick {
-                            sceneMain.restartPopup(bus)
-                        }
-                    }
-                }
-                // hammer
-                roundRect(
-                    width = SizeAdapter.cellSize,
-                    height = SizeAdapter.cellSize,
-                    rx = SizeAdapter.cellSize * .17,
-                    strokeThickness = SizeAdapter.borderStroke,
-                    fill = PlayBlockColor.getColorByPower(7)
-                ) {
-
-                    // !TODO make unactive if playground is empty
-                    val hammerSvg = resourcesVfs["icons/hammer.svg"].readSVG()
-                    val hammerDrawable = hammerSvg.scaled(
-                        SizeAdapter.getScaleValueByAbsolute(
-                            initialWidth = hammerSvg.width.toDouble(),
-                            settingWidth = SizeAdapter.cellSize * .75
-                        )
-                    )
-
-                    image(texture = hammerDrawable.render()) {
-                        centerOn(this.parent!!)
-
-                        onClick {
-                            playgroundManager.setAnimationState(AnimationState.HAMMER_SELECTING)
-                        }
-                    }
-                }.alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
         }
     }

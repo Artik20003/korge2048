@@ -1,4 +1,4 @@
-package presentation
+package presentation.buttons
 
 import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
