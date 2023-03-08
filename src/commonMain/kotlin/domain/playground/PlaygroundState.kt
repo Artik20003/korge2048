@@ -7,7 +7,13 @@ data class PlaygroundState(
 
     val playground: Playground = Playground(
         blocks = listOf(
-
+            // FOR SWITCH TEST
+            mutableListOf(PlaygroundBlock(power = 1), PlaygroundBlock(power = 6)),
+            mutableListOf(PlaygroundBlock(power = 6), PlaygroundBlock(power = 1)),
+            mutableListOf(),
+            mutableListOf(),
+            mutableListOf(),
+            /*
             // empty
             mutableListOf(),
             mutableListOf(),
@@ -15,7 +21,7 @@ data class PlaygroundState(
             mutableListOf(),
             mutableListOf(),
             // end of empty
-
+            */
             /*
             // FOR NEW HIGHEST STATE
             mutableListOf(
@@ -149,6 +155,8 @@ enum class AnimationState() {
     STATIC,
     BLOCKS_REMOVING,
     HAMMER_SELECTING,
+    SWITCH_BLOCKS_SELECTING,
+    BLOCKS_SWITCHING,
 }
 
 data class PlaygroundBlockAnimatingState(

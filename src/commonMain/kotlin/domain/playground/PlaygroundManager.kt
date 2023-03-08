@@ -1,8 +1,8 @@
 package domain.playground
 import Constants
 import com.soywiz.korio.util.*
-import kotlin.collections.set
 import kotlinx.coroutines.flow.*
+import kotlin.collections.set
 
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
@@ -326,7 +326,13 @@ class PlaygroundManager {
 
     private fun moveBlocks() {
 
-        val newPlayground = Playground()
+        val newPlaygroundBlocks: List<MutableList<PlaygroundBlock?>> =
+            List(
+                Constants.Playground.COL_COUNT
+            ) {
+                MutableList(Constants.Playground.ROW_COUNT) { null }
+            }
+
         state.value.playground.iterateBlocks { col, row, block ->
 
             if (block.removingState) {
@@ -339,34 +345,40 @@ class PlaygroundManager {
                     collapsingState.targetRow == row
                 ) {
 
-                    newPlayground.blocks[col].add(
-                        // block.movingState?.targetRow ?: row,
+                    newPlaygroundBlocks[col][row] =
                         PlaygroundBlock(
                             id = block.id,
                             power = block.targetPower ?: block.power,
                             isPrioritizedForCollapsing = true
                         )
-                    )
                 }
                 return@iterateBlocks
             }
+
             block.movingState?.let { movingState ->
-                newPlayground.blocks[movingState.targetCol].add(
-                    // movingState.targetRow,
+                newPlaygroundBlocks[movingState.targetCol][movingState.targetRow] =
                     PlaygroundBlock(
                         id = block.id,
                         power = block.power,
-                        isPrioritizedForCollapsing = true
+                        isPrioritizedForCollapsing = true,
                     )
-                )
+
                 return@iterateBlocks
             }
-            newPlayground.blocks[col].add(
+
+            newPlaygroundBlocks[col][row] =
                 PlaygroundBlock(
                     id = block.id,
                     power = block.power
                 )
-            )
+        }
+        val newPlayground = Playground()
+        newPlaygroundBlocks.forEachIndexed { col, list ->
+            list.forEachIndexed { row, block ->
+                block?.let {
+                    newPlayground.blocks[col].add(it)
+                }
+            }
         }
 
         val newPlaygroundBlocksAnimatingState:
@@ -421,6 +433,19 @@ class PlaygroundManager {
 //        }
         state.value.playground.blocks[col][row].removingState = true
         state.value = state.value
+    }
+
+    fun switchBlocks(col1: Int, row1: Int, col2: Int, row2: Int) {
+        /*
+        val tmpBlock = state.value.playground.blocks[col1][row1]
+        state.value.playground.blocks[col1][row1] = state.value.playground.blocks[col2][row2]
+        state.value.playground.blocks[col2][row2] = tmpBlock
+
+         */
+        state.value.playground.blocks[col1][row1].movingState = PlaygroundBlock.ChangingState(col2, row2)
+        state.value.playground.blocks[col2][row2].movingState = PlaygroundBlock.ChangingState(col1, row1)
+        state.value = state.value
+        setAnimationState(AnimationState.BLOCKS_MOVING)
     }
 
     fun removeBlocksByMinPower(minValidPower: Int) {

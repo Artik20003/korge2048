@@ -25,6 +25,7 @@ class Block(
     val power: Int,
     val cellSize: Double,
     var isHighest: Boolean = false,
+    var isSelected: Boolean = false
 
 ) : Container() {
     var block: Container = container { }
@@ -35,17 +36,34 @@ class Block(
 
     fun redrawBlock() {
         val oldBlock = block
-        block = container {
+        block = fixedSizeContainer(cellSize, cellSize, true) {
 
-            roundRect(cellSize, cellSize, SizeAdapter.cellSize * .17, fill = PlayBlockColor.getColorByPower(power))
+            roundRect(
+                width = cellSize,
+                height = cellSize,
+                rx = SizeAdapter.cellSize * .17,
+                fill = PlayBlockColor.getColorByPower(power),
+            )
             text(
                 text = BlockTextAdapter.getTextByPower(power),
                 textSize = BlockTextAdapter.getFontSizeByPower(power),
                 fill = Colors.WHITE,
-                font = DefaultFontFamily.font
+                font = DefaultFontFamily.font,
+
             ).apply {
                 centerBetween(0.0, 0.0, cellSize, cellSize)
             }
+            val selectionStroke = SizeAdapter.cellSize * .07
+            if (isSelected) {
+                roundRect(
+                    width = cellSize - selectionStroke / 2,
+                    height = cellSize - selectionStroke / 2,
+                    rx = SizeAdapter.cellSize * .17,
+                    fill = Colors.TRANSPARENT_WHITE,
+                    strokeThickness = selectionStroke
+                )
+            }
+
             if (isHighest) {
 
                 launchImmediately(Dispatchers.Default) {

@@ -73,6 +73,8 @@ class UIPlaygroundBlock(
     private val cellSize: Double = SizeAdapter.cellSize
     private var playgroundBlock: UIPlaygroundBlock = this
     private val isExtraRowPlacing = row == Constants.Playground.ROW_COUNT
+    var isSeleted: Boolean = false
+        private set
 
     init {
         position(
@@ -213,6 +215,22 @@ class UIPlaygroundBlock(
                     onRemoveBlockAnimationFinished()
                 }
             }
+        }
+    }
+
+    fun toggleSwitchSelection() {
+        block?.let {
+            it.isSelected = !it.isSelected
+            isSeleted = it.isSelected
+            it.redrawBlock()
+        }
+    }
+
+    fun removeSwitchSelection() {
+        block?.let {
+            it.isSelected = false
+            isSeleted = it.isSelected
+            it.redrawBlock()
         }
     }
 }

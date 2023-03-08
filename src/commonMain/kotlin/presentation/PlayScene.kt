@@ -34,10 +34,12 @@ import domain.score.*
 import domain.upcoming.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import presentation.*
 import presentation.adapters.*
 import presentation.buttons.*
 import presentation.popup.*
 import presentation.popup.content.*
+import presentation.topbar.*
 
 @OptIn(FlowPreview::class)
 class PlayScene(val bus: GlobalBus) : Scene() {
@@ -60,6 +62,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     var upcomingBlocks = UpcomingBlocks()
     var endOfGamePopup: Container = Container()
     var hammerContainer: Container = Container()
+    var switchBlockContainer: Container = Container()
     var backButton = BackButton()
 
     override suspend fun SContainer.sceneMain() {
@@ -67,6 +70,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
             x = SizeAdapter.horizontalPlaygroundMarginValue,
             y = SizeAdapter.horizontalPlaygroundMarginValue / 2,
         )
+
         bus.register<Event.GameOver> { this.showEndOfGamePopup() }
         val sceneMain = this
         container {
@@ -81,44 +85,25 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 height = 100,
             ) {
                 val topBar = this
-
-                // Current Score
-                text(
-                    text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.score),
-                    textSize = 60.0,
-                    font = DefaultFontFamily.font,
-                ) {
-                    scoreManager.state.onEach {
-                        text = ScoreTextAdapter.getTextByScore(it.score)
-                        centerOn(this.parent ?: this.containerRoot)
-                    }.launchIn(CoroutineScope(Dispatchers.Default))
-                }
-                // Best Score
-                container {
-                    val bestScoreContainer = this
-                    val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
-                        scale = .02
-                    }
-
-                    text(
-                        text = ScoreTextAdapter.getTextByScore(scoreManager.state.value.bestScore),
-                        textSize = 35.0,
-                    ) {
-                        alignLeftToRightOf(crownIcon, 7.0)
-                        positionY(13)
-                        scoreManager.state.onEach {
-                            text = ScoreTextAdapter.getTextByScore(it.bestScore)
-                            alignLeftToRightOf(crownIcon, 6.0)
-                            bestScoreContainer.alignRightToRightOf(topBar, 15)
-                        }.launchIn(CoroutineScope(Dispatchers.Default))
-                    }
-                    alignRightToRightOf(topBar, 15)
-                    alignTopToTopOf(topBar, 5)
-                }
+                CurrentScore(scoreManager, topBar).addTo(this)
+                BestScore(scoreManager, topBar).addTo(this)
             }
 
             playgroundBgColumns = drawBgColumns()
             playground = container {
+                for (colNum in 0 until Constants.Playground.COL_COUNT) {
+                    clickableColumn(
+                        onClick = {
+                            playgroundManager.push(colNum, upcomingValuesManager.state.value.upcomingValues[0]) {
+                                upcomingValuesManager.generateUpcomingValues()
+                            }
+                        }
+                    )
+                        .position(
+                            x = (colNum * SizeAdapter.columnSize).toInt(),
+                            y = 0
+                        )
+                }
                 alignTopToBottomOf(topBar ?: containerRoot)
                 this.positionX(SizeAdapter.horizontalPlaygroundMarginValue)
                 playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
@@ -141,19 +126,6 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         onRemoveBlockAnimationFinished = { onRemoveBlockAnimationFinishedFlag.value = true }
                     )
                     blocks[block.id] = playgroundBlock
-                }
-                for (colNum in 0 until Constants.Playground.COL_COUNT) {
-                    clickableColumn(
-                        onClick = {
-                            playgroundManager.push(colNum, upcomingValuesManager.state.value.upcomingValues[0]) {
-                                upcomingValuesManager.generateUpcomingValues()
-                            }
-                        }
-                    )
-                        .position(
-                            x = (colNum * SizeAdapter.columnSize).toInt(),
-                            y = 0
-                        )
                 }
             }
 
@@ -185,8 +157,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 updateUIBlockState()
                 when (state.animationState) {
                     AnimationState.NEW_BLOCK_PLACING,
-                    AnimationState.STATIC,
-                    -> {
+                    AnimationState.STATIC, -> {
                         redrawPlayground()
                     }
 
@@ -204,6 +175,12 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     }
                     AnimationState.HAMMER_SELECTING -> {
                         activateHammerSelecting()
+                    }
+                    AnimationState.SWITCH_BLOCKS_SELECTING -> {
+                        activateSwitchBlocksSelecting()
+                    }
+                    AnimationState.BLOCKS_SWITCHING -> {
+                        playgroundManager.setAnimationState(AnimationState.STATIC)
                     }
                 }
             }.launchIn(CoroutineScope(Dispatchers.Default))
@@ -249,10 +226,53 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     bgColor = PlayBlockColor.getColorByPower(8),
                     imageResourcePath = "icons/switch-blocks.svg",
                     imageWidth = SizeAdapter.cellSize * .75,
-                    onClick = {}
+                    onClick = { playgroundManager.setAnimationState(AnimationState.SWITCH_BLOCKS_SELECTING) }
                 ).alignLeftToRightOf(hammerBtn, SizeAdapter.marginM)
-
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
+        }
+    }
+
+    private fun Container.activateSwitchBlocksSelecting() {
+        topBar?.visible(false)
+        upcomingBlocks.visible(false)
+        bottomMenu.visible(false)
+
+        switchBlockContainer = switchBlockContainer()
+            .alignTopToBottomOf(playground, -SizeAdapter.marginM)
+
+        backButton.activate {
+            deactivateSwitchBlockSelecting()
+            playgroundManager.setAnimationState(AnimationState.STATIC)
+        }
+
+        blocks.forEach {
+            val playgroundBlock = it.value
+            playgroundBlock.mouseEnabled = true
+            playgroundBlock.onClick {
+                playgroundBlock.toggleSwitchSelection()
+                val selectedBlocks = blocks.filter { it.value.isSeleted }
+                if (selectedBlocks.count() == 2) {
+                    val block1 = selectedBlocks.values.first()
+                    val block2 = selectedBlocks.values.last()
+                    playgroundManager.switchBlocks(block1.col, block1.row, block2.col, block2.row)
+                    deactivateSwitchBlockSelecting()
+                }
+                // playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
+            }
+        }
+    }
+
+    private fun deactivateSwitchBlockSelecting() {
+        topBar?.visible(true)
+        backButton.visible(false)
+        upcomingBlocks.visible(true)
+        bottomMenu.visible(true)
+        switchBlockContainer.removeFromParent()
+
+        blocks.values.forEach { block ->
+            block.removeSwitchSelection()
+            block.mouse.click.clear()
+            block.mouseEnabled = false
         }
     }
 
