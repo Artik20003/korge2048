@@ -154,10 +154,44 @@ class PlaygroundManager {
         // all the figures except horizontal pair. In horizontal pair we need to know where to collapse
         val figures = listOf(
             // the order is critical. From biggest to smallest
+            // -*-
+            // *@*
+            // -*-
+            listOf(
+                Pair(0, 1),
+                Pair(1, 0),
+                Pair(-1, 0),
+                Pair(0, 1),
+            ),
+
             // _*_
             // *@*
             listOf(
                 Pair(0, -1),
+                Pair(1, 0),
+                Pair(-1, 0),
+            ),
+            // _*_
+            // _@*
+            // _*_
+            listOf(
+                Pair(0, -1),
+                Pair(1, 1),
+                Pair(0, 1),
+            ),
+            // _*_
+            // *@-
+            // _*_
+            listOf(
+                Pair(0, 1),
+                Pair(-1, -1),
+                Pair(0, -1),
+            ),
+
+            // *@*
+            // _*_
+            listOf(
+                Pair(0, 1),
                 Pair(1, 0),
                 Pair(-1, 0),
             ),
@@ -171,6 +205,13 @@ class PlaygroundManager {
             listOf(
                 Pair(-1, 0),
                 Pair(1, 0)
+            ),
+            // *
+            // @
+            // *
+            listOf(
+                Pair(0, -1),
+                Pair(0, 1)
             ),
             // *@
             // _*
