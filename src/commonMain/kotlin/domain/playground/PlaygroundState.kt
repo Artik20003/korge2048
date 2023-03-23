@@ -8,9 +8,22 @@ data class PlaygroundState(
     val playground: Playground = Playground(
         blocks = listOf(
             // FOR SWITCH TEST
-            mutableListOf(PlaygroundBlock(power = 1), PlaygroundBlock(power = 6)),
-            mutableListOf(PlaygroundBlock(power = 6), PlaygroundBlock(power = 1)),
-            mutableListOf(),
+            mutableListOf(
+                PlaygroundBlock(power = 8),
+                PlaygroundBlock(power = 2)
+            ),
+            mutableListOf(
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 3),
+                PlaygroundBlock(power = 4),
+                PlaygroundBlock(power = 5),
+            ),
+            mutableListOf(
+                PlaygroundBlock(power = 5),
+                PlaygroundBlock(power = 1),
+                PlaygroundBlock(power = 2),
+                PlaygroundBlock(power = 1),
+            ),
             mutableListOf(),
             mutableListOf(),
             /*
@@ -96,7 +109,7 @@ data class PlaygroundState(
     // val score: Long = 0,
 
     var playgroundBlocksAnimatingState: Map<UUID, PlaygroundBlockAnimatingState> = emptyMap(),
-    val lastAddedColumn: Int? = null,
+    // val lastAddedColumn: Int? = null,
     val animationState: AnimationState = AnimationState.STATIC,
     val currentCascadeCount: Int = 0
 

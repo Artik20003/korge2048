@@ -7,6 +7,7 @@ import kotlin.collections.set
 class PlaygroundManager {
     var state = MutableStateFlow<PlaygroundState>(PlaygroundState())
         private set
+    private var prevStateValue: PlaygroundState? = null
     private var staticHandlerList: MutableList<() -> Unit> = mutableListOf()
     private var cascadeHandlerList: MutableList<(cascadeCount: Int) -> Unit> = mutableListOf()
     private var collapsedHandlerList: MutableList<() -> Unit> = mutableListOf()
@@ -45,7 +46,7 @@ class PlaygroundManager {
     }
 
     fun push(column: Int, power: Int, callback: () -> Unit) {
-
+        savePrevState()
         if (column !in 0 until Constants.Playground.COL_COUNT)
             throw IllegalArgumentException("Column number should be between 0..4, $column provided")
         if (state.value.playground.blocks[column].size >= Constants.Playground.ROW_COUNT + 1) return
@@ -58,7 +59,7 @@ class PlaygroundManager {
 
         // start animation
         state.value = state.value.copy(
-            lastAddedColumn = column,
+            // lastAddedColumn = column,
             animationState = AnimationState.NEW_BLOCK_PLACING,
         )
 
@@ -83,6 +84,28 @@ class PlaygroundManager {
         )
         preparePlaygroundForCollapsing()
         callback()
+    }
+
+    private fun savePrevState() {
+        val prevBlocks = List<MutableList<PlaygroundBlock>>(Constants.Playground.COL_COUNT) {
+            mutableListOf()
+        }
+        state.value.playground.blocks.forEachIndexed { col, colList ->
+
+            colList.forEach { playgroundBlock ->
+                prevBlocks[col].add(
+                    PlaygroundBlock(
+                        power = playgroundBlock.power,
+                    )
+                )
+            }
+        }
+        prevStateValue = PlaygroundState(
+            playground = Playground(
+                blocks = prevBlocks
+            ),
+
+        )
     }
 
     fun setAnimationState(animationState: AnimationState) {
@@ -114,6 +137,7 @@ class PlaygroundManager {
                 }
                 launchOnStaticStateHandlers()
                 launchOnCascadeHandlers()
+
                 state.value = state.value.copy(currentCascadeCount = 0)
             }
 
@@ -161,7 +185,7 @@ class PlaygroundManager {
                 Pair(0, 1),
                 Pair(1, 0),
                 Pair(-1, 0),
-                Pair(0, 1),
+                Pair(0, -1),
             ),
 
             // _*_
@@ -385,8 +409,10 @@ class PlaygroundManager {
                     collapsingState.targetCol == col &&
                     collapsingState.targetRow == row
                 ) {
+                    val newCol = block.movingState?.targetCol ?: col
+                    val newRow = block.movingState?.targetRow ?: row
 
-                    newPlaygroundBlocks[col][row] =
+                    newPlaygroundBlocks[newCol][newRow] =
                         PlaygroundBlock(
                             id = block.id,
                             power = block.targetPower ?: block.power,
@@ -437,52 +463,15 @@ class PlaygroundManager {
         )
     }
 
-    /*
-    private fun logPlayground(){
-        var log = "  "
-
-        for(col in 0..Constants.Playground.COL_COUNT - 1) {
-            log +="$col|"
-        }
-        log += "\n  "
-        for(col in 0..Constants.Playground.COL_COUNT - 1) {
-            log += "__"
-        }
-        log += "\n"
-        for(row in 0..Constants.Playground.ROW_COUNT - 1){
-            log += "$row|"
-            for(col in 0..Constants.Playground.COL_COUNT - 1) {
-                val printVal = state.value.playground.blocks[col].getOrNull(row)?: '*'
-                log += "$printVal|"
-            }
-            log += "\n"
-
-        }
-        println(log)
-    }
-     */
-
     fun removeBlock(col: Int, row: Int) {
-//        val newBlocks = state.value.playground.blocks
-//        newBlocks[col][row].removingState = true
-//        state.update {
-//            it.copy(
-//                playground = it.playground.copy(
-//                    blocks = newBlocks
-//                )
-//            )
-//        }
+        savePrevState()
         state.value.playground.blocks[col][row].removingState = true
         state.value = state.value
     }
 
     fun switchBlocks(col1: Int, row1: Int, col2: Int, row2: Int) {
-        /*
-        val tmpBlock = state.value.playground.blocks[col1][row1]
-        state.value.playground.blocks[col1][row1] = state.value.playground.blocks[col2][row2]
-        state.value.playground.blocks[col2][row2] = tmpBlock
+        savePrevState()
 
-         */
         state.value.playground.blocks[col1][row1].movingState = PlaygroundBlock.ChangingState(col2, row2)
         state.value.playground.blocks[col2][row2].movingState = PlaygroundBlock.ChangingState(col1, row1)
         state.value = state.value
@@ -496,5 +485,13 @@ class PlaygroundManager {
             }
         }
         setAnimationState(AnimationState.BLOCKS_REMOVING)
+    }
+
+    fun revertState() {
+        prevStateValue?.let {
+            state.value = it
+            prevStateValue = null
+            setAnimationState(AnimationState.STATIC)
+        }
     }
 }

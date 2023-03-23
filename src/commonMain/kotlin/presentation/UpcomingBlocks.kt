@@ -75,7 +75,7 @@ class UpcomingBlocks() : Container() {
     }
 
     fun rotateValues(firstValue: Int, secondValue: Int) {
-        if (firstValue != upcomingBlocks[0]!!.power) {
+        if (firstValue != upcomingBlocks[1]!!.power) {
             clearValues()
             drawUpcomingValues(
                 firstValue = firstValue,

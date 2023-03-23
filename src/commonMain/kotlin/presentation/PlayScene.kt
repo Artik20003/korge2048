@@ -55,7 +55,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     var onMoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onRemoveBlockAnimationFinishedFlag = MutableStateFlow(false)
     var blocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
-    lateinit var playground: Container
+    var playground: Container = Container()
     var playgroundBgColumns: Container? = null
     var topBar: Container? = null
     var bottomMenu: Container = Container()
@@ -106,28 +106,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 }
                 alignTopToBottomOf(topBar ?: containerRoot)
                 this.positionX(SizeAdapter.horizontalPlaygroundMarginValue)
-                playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
-                    val playgroundBlock = playgroundBlock(
-                        col = col,
-                        row = row,
-                        power = block.power,
-                        animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
-                            .animatingState,
-                        isHighest =
-                        block.power == playgroundManager.state.value.highestBlockPower,
-                        targetPower = block.targetPower,
-                        collapsingState = block.collapsingState,
-                        movingState = block.movingState,
-                        removingState = block.removingState,
-                        playgroundAnimationState = playgroundManager.state.value.animationState,
-                        onNewBlockAnimationFinished = { onNewBlockAnimationFinishedFlag.value = true },
-                        onCollapseBlockAnimationFinished = { onCollapseBlockAnimationFinishedFlag.value = true },
-                        onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true },
-                        onRemoveBlockAnimationFinished = { onRemoveBlockAnimationFinishedFlag.value = true }
-                    )
-                    blocks[block.id] = playgroundBlock
-                }
             }
+            reInitPlayground()
 
             setOnEndAnimationHandlers()
             playgroundManager.addOnStaticStateListener {
@@ -158,7 +138,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 when (state.animationState) {
                     AnimationState.NEW_BLOCK_PLACING,
                     AnimationState.STATIC, -> {
-                        redrawPlayground()
+                        animatePlayground()
                     }
 
                     AnimationState.BLOCKS_COLLAPSING -> {
@@ -170,7 +150,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     }
 
                     AnimationState.BLOCKS_REMOVING -> {
-                        redrawPlayground()
+                        animatePlayground()
                         blocks.forEach { it.value.removeIfNeeded() }
                     }
                     AnimationState.HAMMER_SELECTING -> {
@@ -183,12 +163,6 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                         playgroundManager.setAnimationState(AnimationState.STATIC)
                     }
                 }
-            }.launchIn(CoroutineScope(Dispatchers.Default))
-
-            levelManager.state.onEach {
-                println("Setting new min upcoming value: ${it.level}")
-                upcomingValuesManager.updateLevelUpcomingValues(it.level)
-                playgroundManager.removeBlocksByMinPower(it.level)
             }.launchIn(CoroutineScope(Dispatchers.Default))
 
             // upcomingValues UI
@@ -207,6 +181,11 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     secondValue = upcomingValuesManager.state.value.upcomingValues[1]
                 )
             }
+            levelManager.state.onEach {
+                println("Setting new min upcoming value: ${it.level}")
+                upcomingValuesManager.updateLevelUpcomingValues(it.level)
+                playgroundManager.removeBlocksByMinPower(it.level)
+            }.launchIn(CoroutineScope(Dispatchers.Default))
 
             bottomMenu = container {
                 val restartBtn = imageButton(
@@ -228,6 +207,16 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     imageWidth = SizeAdapter.cellSize * .75,
                     onClick = { playgroundManager.setAnimationState(AnimationState.SWITCH_BLOCKS_SELECTING) }
                 ).alignLeftToRightOf(hammerBtn, SizeAdapter.marginM)
+                val revertButton = imageButton(
+                    bgColor = PlayBlockColor.getColorByPower(9),
+                    imageResourcePath = "icons/switch-blocks.svg",
+                    imageWidth = SizeAdapter.cellSize * .75,
+                    onClick = {
+                        playgroundManager.revertState()
+                        upcomingValuesManager.revertUpcomingValues()
+                        reInitPlayground()
+                    }
+                ).alignLeftToRightOf(switchButton, SizeAdapter.marginM)
             }.alignTopToBottomOf(upcomingBlocks, SizeAdapter.marginL)
         }
     }
@@ -429,7 +418,35 @@ class PlayScene(val bus: GlobalBus) : Scene() {
         }.launchIn(CoroutineScope(Dispatchers.Default))
     }
 
-    fun Container.redrawPlayground() {
+    fun Container.reInitPlayground() {
+        val newBlocks: MutableMap<UUID, UIPlaygroundBlock> = mutableMapOf()
+        playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
+            val playgroundBlock = UIPlaygroundBlock(
+                col = col,
+                row = row,
+                power = block.power,
+                animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
+                    .animatingState,
+                isHighest =
+                block.power == playgroundManager.state.value.highestBlockPower,
+                targetPower = block.targetPower,
+                collapsingState = block.collapsingState,
+                movingState = block.movingState,
+                removingState = block.removingState,
+                playgroundAnimationState = playgroundManager.state.value.animationState,
+                onNewBlockAnimationFinished = { onNewBlockAnimationFinishedFlag.value = true },
+                onCollapseBlockAnimationFinished = { onCollapseBlockAnimationFinishedFlag.value = true },
+                onMoveBlockAnimationFinished = { onMoveBlockAnimationFinishedFlag.value = true },
+                onRemoveBlockAnimationFinished = { onRemoveBlockAnimationFinishedFlag.value = true }
+            ).addTo(playground)
+            newBlocks[block.id] = playgroundBlock
+        }
+        blocks.forEach {
+            it.value.removeFromParent()
+        }
+        blocks = newBlocks
+    }
+    fun Container.animatePlayground() {
         // remove blocks that are not in playground
         val domainBlockIds = mutableListOf<UUID>()
         playgroundManager.state.value.playground.iterateBlocks { col, row, block ->
