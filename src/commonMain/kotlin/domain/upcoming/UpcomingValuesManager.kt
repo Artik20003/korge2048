@@ -1,7 +1,7 @@
 package domain.upcoming
 
-import kotlinx.coroutines.flow.*
 import kotlin.random.*
+import kotlinx.coroutines.flow.*
 
 class UpcomingValuesManager {
 

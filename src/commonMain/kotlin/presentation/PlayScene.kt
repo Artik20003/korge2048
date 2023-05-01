@@ -28,6 +28,7 @@ import com.soywiz.korma.geom.vector.*
 import com.soywiz.korma.interpolation.*
 import data.*
 import domain.*
+import domain.diamond.*
 import domain.level.*
 import domain.playground.*
 import domain.score.*
@@ -47,8 +48,9 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     var playgroundManager: PlaygroundManager = PlaygroundManager()
     var levelManager: LevelManager = LevelManager(playgroundManager.state.value.playground)
     var scoreManager: ScoreManager = ScoreManager(
-        playgroundManager.state.value.playground, DefaultStorage.storage
+        playgroundManager.state.value.playground
     )
+    var diamondManager: DiamondManager = DiamondManager(levelManager)
     var upcomingValuesManager: UpcomingValuesManager = UpcomingValuesManager()
     var onNewBlockAnimationFinishedFlag = MutableStateFlow(false)
     var onCollapseBlockAnimationFinishedFlag = MutableStateFlow(false)
@@ -59,10 +61,23 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     var playgroundBgColumns: Container? = null
     var topBar: Container? = null
     var bottomMenu: Container = Container()
+
     var upcomingBlocks = UpcomingBlocks()
     var endOfGamePopup: Container = Container()
+        set(value) {
+            endOfGamePopup.removeFromParent()
+            field = value
+        }
     var hammerContainer: Container = Container()
+        set(value) {
+            hammerContainer.removeFromParent()
+            field = value
+        }
     var switchBlockContainer: Container = Container()
+        set(value) {
+            switchBlockContainer.removeFromParent()
+            field = value
+        }
     var backButton = BackButton()
 
     override suspend fun SContainer.sceneMain() {
@@ -85,6 +100,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 height = 100,
             ) {
                 val topBar = this
+                DiamondCount(diamondManager, topBar).addTo(this)
                 CurrentScore(scoreManager, topBar).addTo(this)
                 BestScore(scoreManager, topBar).addTo(this)
             }
@@ -116,12 +132,28 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 playgroundManager.checkEndOfGame(upcomingValuesManager.state.value.upcomingValues[0])
             }
 
+            playgroundManager.addOnRestartListener {
+                levelManager = LevelManager(playgroundManager.state.value.playground)
+                upcomingValuesManager.updateLevelUpcomingValues(levelManager.state.value.level)
+                scoreManager.clearScore()
+            }
+
+            playgroundManager.addOnHammerRemoveBlockListener {
+                diamondManager.pay(PayableDiamondAction.HAMMER)
+            }
+
+            playgroundManager.addOnSwitchBlocksListener {
+                diamondManager.pay(PayableDiamondAction.SWITCH)
+            }
+
             playgroundManager.addOnCollapsedStateListener {
                 scoreManager.playground = playgroundManager.state.value.playground
                 scoreManager.updateScore()
             }
             // show Cascade
             playgroundManager.addOnCascadeListener { cascadeCount ->
+                if (cascadeCount >= Constants.Playground.MIN_CASCADE_TO_ADD_DIAMONDS)
+                    diamondManager.addDiamonds(cascadeCount)
                 launchImmediately {
                     showWowCascadeContainer(cascadeCount)
                 }
@@ -188,25 +220,39 @@ class PlayScene(val bus: GlobalBus) : Scene() {
             }.launchIn(CoroutineScope(Dispatchers.Default))
 
             bottomMenu = container {
+
                 val restartBtn = imageButton(
                     bgColor = PlayBlockColor.getColorByPower(1),
                     imageResourcePath = "icons/restart.svg",
                     imageWidth = SizeAdapter.cellSize * .75,
-                    onClick = { sceneMain.restartPopup(bus) }
+                    onClick = { sceneMain.restartPopup(bus, isEndOfGame = false) }
                 )
-                val hammerBtn = imageButton(
+
+                val hammerBtn = DiamondButton(
+                    diamondPrice = diamondManager.state.value.currentHammerPrice,
                     bgColor = PlayBlockColor.getColorByPower(7),
                     imageResourcePath = "icons/hammer.svg",
                     imageWidth = SizeAdapter.cellSize * .75,
                     onClick = { playgroundManager.setAnimationState(AnimationState.HAMMER_SELECTING) }
-                ).alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
+                ).addTo(this) {
+                    alignLeftToRightOf(restartBtn, SizeAdapter.marginM)
+                    diamondManager.state.onEach {
+                        diamondPrice = diamondManager.state.value.currentHammerPrice
+                    }.launchIn(CoroutineScope(Dispatchers.Default))
+                }
 
-                val switchButton = imageButton(
+                val switchButton = DiamondButton(
+                    diamondPrice = diamondManager.state.value.currentSwitchPrice,
                     bgColor = PlayBlockColor.getColorByPower(8),
                     imageResourcePath = "icons/switch-blocks.svg",
                     imageWidth = SizeAdapter.cellSize * .75,
                     onClick = { playgroundManager.setAnimationState(AnimationState.SWITCH_BLOCKS_SELECTING) }
-                ).alignLeftToRightOf(hammerBtn, SizeAdapter.marginM)
+                ).addTo(this) {
+                    diamondManager.state.onEach {
+                        diamondPrice = diamondManager.state.value.currentSwitchPrice
+                    }.launchIn(CoroutineScope(Dispatchers.Default))
+                    alignLeftToRightOf(hammerBtn, SizeAdapter.marginM)
+                }
                 val revertButton = imageButton(
                     bgColor = PlayBlockColor.getColorByPower(9),
                     imageResourcePath = "icons/switch-blocks.svg",
@@ -280,8 +326,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
             val playgroundBlock = it.value
             playgroundBlock.mouseEnabled = true
             playgroundBlock.onClick {
-                playgroundManager.removeBlock(playgroundBlock.col, playgroundBlock.row)
-                playgroundManager.setAnimationState(AnimationState.BLOCKS_REMOVING)
+                playgroundManager.hammerRemoveBlock(playgroundBlock.col, playgroundBlock.row)
+
                 deactivateHammerSelecting()
             }
         }
@@ -301,7 +347,7 @@ class PlayScene(val bus: GlobalBus) : Scene() {
     }
 
     private suspend fun Container.restartGame() {
-        sceneContainer.changeTo({ PlayScene(bus) })
+        playgroundManager.restartGame()
     }
 
     private suspend fun Container.showWowCascadeContainer(cascadeCount: Int) {
@@ -373,7 +419,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 container {
                     solidRect(
                         width = SizeAdapter.cellSize,
-                        height = Constants.Playground.ROW_COUNT * SizeAdapter.cellSize,
+                        height = Constants.Playground.ROW_COUNT *
+                            (SizeAdapter.cellSize + SizeAdapter.horizontalPlaygroundColumnMarginValue),
                         color = StyledColors.theme.playgroundColumnBg
                     ).position(
                         x = SizeAdapter.horizontalPlaygroundColumnMarginValue,
@@ -425,8 +472,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                 col = col,
                 row = row,
                 power = block.power,
-                animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
-                    .animatingState,
+                animationState = playgroundManager.state.value
+                    .playgroundBlocksAnimatingState[block.id]?.animatingState ?: PlayBlockAnimationState.PLACED,
                 isHighest =
                 block.power == playgroundManager.state.value.highestBlockPower,
                 targetPower = block.targetPower,
@@ -465,8 +512,8 @@ class PlayScene(val bus: GlobalBus) : Scene() {
                     col = col,
                     row = row,
                     power = block.power,
-                    animationState = playgroundManager.state.value.playgroundBlocksAnimatingState[block.id]!!
-                        .animatingState,
+                    animationState = playgroundManager.state.value
+                        .playgroundBlocksAnimatingState[block.id]?.animatingState ?: PlayBlockAnimationState.PLACED,
                     isHighest =
                     block.power == playgroundManager.state.value.highestBlockPower,
                     targetPower = block.targetPower,

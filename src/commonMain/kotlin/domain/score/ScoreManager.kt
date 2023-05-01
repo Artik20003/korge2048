@@ -1,26 +1,33 @@
 package domain.score
 
 import com.soywiz.kbignum.*
-import com.soywiz.korge.service.storage.*
+import com.soywiz.korge.service.storage.NativeStorage
+import data.*
 import domain.playground.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 class ScoreManager(
     var playground: Playground,
-    val storage: NativeStorage
+
 ) {
+    private val storage: NativeStorage = DefaultStorage.storage
 
     var state = MutableStateFlow<ScoreState>(ScoreState())
 
     init {
-        initBestScore()
-        updateScore()
-    }
 
-    private fun initBestScore() {
         state.value = state.value.copy(
-            bestScore = getBestScoreFromStorage()
+            bestScore = getBestScoreFromStorage(),
+            score = getScoreFromStorage()
         )
+
+        updateScore()
+
+        state.onEach {
+            storage["best"] = it.bestScore.toString()
+            storage["score"] = it.score.toString()
+        }.launchIn(CoroutineScope(Dispatchers.Unconfined))
     }
 
     private fun getBestScoreFromStorage(): BigInt {
@@ -29,28 +36,17 @@ class ScoreManager(
         }
         return BigInt.ZERO
     }
-
-    fun getBestScore(): BigInt {
-        return state.value.bestScore
-    }
-
-    private fun setBestScore(score: BigInt) {
-        state.value = state.value.copy(bestScore = score)
-        storeBestScore(score)
-    }
-
-    private fun storeBestScore(score: BigInt) {
-        storage["best"] = score.toString()
+    private fun getScoreFromStorage(): BigInt {
+        storage.getOrNull("score")?.let {
+            return BigInt(it)
+        }
+        return BigInt.ZERO
     }
 
     private fun updateBestScoreIfPossible(score: BigInt) {
-        if (score > getBestScore()) {
-            setBestScore(score)
+        if (score > state.value.bestScore) {
+            state.value = state.value.copy(bestScore = score)
         }
-    }
-
-    fun getScore(): BigInt {
-        return state.value.score
     }
 
     private fun setScore(score: BigInt) {
@@ -72,10 +68,9 @@ class ScoreManager(
 
         setScore(state.value.score + scoreSpread)
         updateBestScoreIfPossible(state.value.score)
-        println(
-            "Current score: " + "${getScore()} " +
-                "Best Score: " + "${getBestScore()}" +
-                " Storage best score: ${getBestScoreFromStorage()} "
-        )
+    }
+
+    fun clearScore() {
+        setScore(BigInt.ZERO)
     }
 }

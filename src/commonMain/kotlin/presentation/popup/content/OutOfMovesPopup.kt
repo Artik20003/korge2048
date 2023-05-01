@@ -10,7 +10,7 @@ import com.soywiz.korio.file.std.*
 import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
-import presentation.buttons.button
+import presentation.buttons.*
 import presentation.popup.*
 
 fun Container.outOfMovesPopup(bus: GlobalBus) {
@@ -61,8 +61,13 @@ class OutOfMovesPopup(val bus: GlobalBus) : PopupContent() {
                 alignTopToBottomOf(h2, SizeAdapter.marginL)
                 launchImmediately(Dispatchers.Default) {
                     val svg = resourcesVfs["/icons/crown.svg"].readSVG()
-                    image(texture = svg.render(false)) {
-                        scale = SizeAdapter.getScaleValueByAbsolute(svg.dwidth, SizeAdapter.cellSize)
+                    val scaledSvg = svg.scaled(
+                        SizeAdapter.getScaleValueByAbsolute(
+                            initialWidth = svg.width.toDouble(),
+                            settingWidth = SizeAdapter.cellSize
+                        )
+                    )
+                    image(texture = scaledSvg.render(false)) {
                         centerOn(this.parent!!)
                     }
                 }

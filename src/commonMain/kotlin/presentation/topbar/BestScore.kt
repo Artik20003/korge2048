@@ -18,8 +18,17 @@ class BestScore(
         launchImmediately(Dispatchers.Unconfined) {
             container {
                 val bestScoreContainer = this
-                val crownIcon = image(texture = resourcesVfs["/icons/crown.svg"].readSVG().render()) {
-                    scale = .02
+
+                val svg = resourcesVfs["/icons/crown.svg"].readSVG()
+                val restartDrawable = svg.scaled(
+                    SizeAdapter.getScaleValueByAbsolute(
+                        initialWidth = svg.width.toDouble(),
+                        settingWidth = SizeAdapter.cellSize * 0.25
+                    )
+                )
+
+                val crownIcon = image(texture = restartDrawable.render()) {
+                    centerYOn(bestScoreContainer)
                 }
 
                 text(
@@ -27,11 +36,11 @@ class BestScore(
                     textSize = 35.0,
                 ) {
                     alignLeftToRightOf(crownIcon, 7.0)
-                    positionY(13)
                     scoreManager.state.onEach {
                         text = ScoreTextAdapter.getTextByScore(it.bestScore)
                         alignLeftToRightOf(crownIcon, 6.0)
                         bestScoreContainer.alignRightToRightOf(alignmentContainer, 15)
+                        crownIcon.centerYOn(bestScoreContainer)
                     }.launchIn(CoroutineScope(Dispatchers.Default))
                 }
                 alignRightToRightOf(alignmentContainer, 15)

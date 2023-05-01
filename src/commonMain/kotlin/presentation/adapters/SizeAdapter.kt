@@ -32,6 +32,7 @@ object SizeAdapter {
     val cornerRadius = cellSize * .17
     val borderStroke = cellSize * .05
 
+    val marginXXS = cellSize * .025
     val marginXS = cellSize * .05
     val marginS = cellSize * .1
     val marginM = cellSize * .2

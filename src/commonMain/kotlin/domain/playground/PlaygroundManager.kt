@@ -1,6 +1,8 @@
 package domain.playground
 import Constants
+import com.soywiz.korge.service.storage.NativeStorage
 import com.soywiz.korio.util.*
+import data.*
 import kotlinx.coroutines.flow.*
 import kotlin.collections.set
 
@@ -12,6 +14,14 @@ class PlaygroundManager {
     private var cascadeHandlerList: MutableList<(cascadeCount: Int) -> Unit> = mutableListOf()
     private var collapsedHandlerList: MutableList<() -> Unit> = mutableListOf()
     private var endOfGameHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private var restartHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private var switchBlocksHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private var hammerRemoveBlockHandlerList: MutableList<() -> Unit> = mutableListOf()
+    private val storage: NativeStorage = DefaultStorage.storage
+
+    init {
+        restorePlaygroundFromStorage()
+    }
 
     fun addOnStaticStateListener(handler: () -> Unit) {
         staticHandlerList.add(handler)
@@ -19,6 +29,30 @@ class PlaygroundManager {
 
     private fun launchOnStaticStateHandlers() {
         staticHandlerList.forEach { it() }
+    }
+
+    fun addOnSwitchBlocksListener(handler: () -> Unit) {
+        switchBlocksHandlerList.add(handler)
+    }
+
+    private fun launchOnSwitchBlocksHandlers() {
+        switchBlocksHandlerList.forEach { it() }
+    }
+
+    fun addOnHammerRemoveBlockListener(handler: () -> Unit) {
+        hammerRemoveBlockHandlerList.add(handler)
+    }
+
+    private fun launchOnHammerRemoveBlockHandlers() {
+        hammerRemoveBlockHandlerList.forEach { it() }
+    }
+
+    fun addOnRestartListener(handler: () -> Unit) {
+        restartHandlerList.add(handler)
+    }
+
+    private fun launchOnRestartHandlers() {
+        restartHandlerList.forEach { it() }
     }
 
     fun addOnCollapsedStateListener(handler: () -> Unit) {
@@ -43,6 +77,37 @@ class PlaygroundManager {
 
     private fun launchOnEndOfGameHandlers() {
         endOfGameHandlerList.forEach { it() }
+    }
+
+    private fun restorePlaygroundFromStorage() {
+        storage.getOrNull("playgroundBlocks")?.let {
+            val serializedCols = it.split("|")
+            val newBlocks = MutableList(Constants.Playground.COL_COUNT) { col ->
+                val blockPower = serializedCols[col].split(":")
+                if (blockPower.isEmpty() || serializedCols[col].isEmpty()) {
+                    mutableListOf()
+                } else {
+                    blockPower.map {
+                        PlaygroundBlock(power = it.toInt())
+                    }.toMutableList()
+                }
+            }
+
+            state.value = state.value.copy(
+                playground = Playground(
+                    blocks = newBlocks
+                )
+            )
+        }
+    }
+
+    private fun savePlaygroundToStorage() {
+        val serializedBlocks = state.value.playground.blocks
+            .map {
+                it.map { it.power }.joinToString(":")
+            }
+            .joinToString("|")
+        storage["playgroundBlocks"] = serializedBlocks
     }
 
     fun push(column: Int, power: Int, callback: () -> Unit) {
@@ -135,6 +200,7 @@ class PlaygroundManager {
                     setAnimationState(AnimationState.BLOCKS_COLLAPSING)
                     return
                 }
+                savePlaygroundToStorage()
                 launchOnStaticStateHandlers()
                 launchOnCascadeHandlers()
 
@@ -200,7 +266,7 @@ class PlaygroundManager {
             // _*_
             listOf(
                 Pair(0, -1),
-                Pair(1, 1),
+                Pair(1, 0),
                 Pair(0, 1),
             ),
             // _*_
@@ -208,7 +274,7 @@ class PlaygroundManager {
             // _*_
             listOf(
                 Pair(0, 1),
-                Pair(-1, -1),
+                Pair(-1, 0),
                 Pair(0, -1),
             ),
 
@@ -247,7 +313,7 @@ class PlaygroundManager {
             // *_
             listOf(
                 Pair(0, 1),
-                Pair(-1, 0)
+                Pair(1, 0)
             ),
             // _*
             // *@
@@ -463,10 +529,16 @@ class PlaygroundManager {
         )
     }
 
-    fun removeBlock(col: Int, row: Int) {
+    private fun removeBlock(col: Int, row: Int) {
         savePrevState()
         state.value.playground.blocks[col][row].removingState = true
         state.value = state.value
+    }
+
+    fun hammerRemoveBlock(col: Int, row: Int) {
+        removeBlock(col, row)
+        launchOnHammerRemoveBlockHandlers()
+        setAnimationState(AnimationState.BLOCKS_REMOVING)
     }
 
     fun switchBlocks(col1: Int, row1: Int, col2: Int, row2: Int) {
@@ -475,6 +547,7 @@ class PlaygroundManager {
         state.value.playground.blocks[col1][row1].movingState = PlaygroundBlock.ChangingState(col2, row2)
         state.value.playground.blocks[col2][row2].movingState = PlaygroundBlock.ChangingState(col1, row1)
         state.value = state.value
+        launchOnSwitchBlocksHandlers()
         setAnimationState(AnimationState.BLOCKS_MOVING)
     }
 
@@ -493,5 +566,11 @@ class PlaygroundManager {
             prevStateValue = null
             setAnimationState(AnimationState.STATIC)
         }
+    }
+
+    fun restartGame() {
+        state.value = PlaygroundState()
+        setAnimationState(AnimationState.STATIC)
+        launchOnRestartHandlers()
     }
 }

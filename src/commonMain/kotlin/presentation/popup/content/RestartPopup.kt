@@ -7,22 +7,26 @@ import com.soywiz.korio.async.*
 import kotlinx.coroutines.*
 import presentation.*
 import presentation.adapters.*
-import presentation.buttons.Button
-import presentation.buttons.button
+import presentation.buttons.*
 import presentation.popup.*
 
-fun Container.restartPopup(bus: GlobalBus) {
+fun Container.restartPopup(
+    bus: GlobalBus,
+    isEndOfGame: Boolean = true,
+) {
     PopupContainer(
-        content = RestartPopup(bus = bus),
+        content = RestartPopup(bus = bus, isEndOfGame = isEndOfGame),
         onClose = {
-            launchImmediately(Dispatchers.Default) {
-                bus.send(Event.GameOver)
+            if (isEndOfGame) {
+                launchImmediately(Dispatchers.Default) {
+                    bus.send(Event.GameOver)
+                }
             }
         }
     ).addTo(containerRoot)
 }
 
-class RestartPopup(val bus: GlobalBus) : PopupContent() {
+class RestartPopup(val bus: GlobalBus, val isEndOfGame: Boolean = true,) : PopupContent() {
 
     override fun onParentChanged() {
         val popupContainer = this.popupContainer ?: return
@@ -58,7 +62,8 @@ class RestartPopup(val bus: GlobalBus) : PopupContent() {
                 type = Button.ButtonType.AGREE,
                 callback = {
                     popupContainer.hide()
-                    outOfMovesPopup(bus)
+                    if (isEndOfGame)
+                        outOfMovesPopup(bus)
                 }
             ).centerXOn(parentContainer).alignTopToBottomOf(text2, SizeAdapter.marginL)
 

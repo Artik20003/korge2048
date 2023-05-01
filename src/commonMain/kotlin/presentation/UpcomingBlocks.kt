@@ -128,6 +128,9 @@ class UpcomingBlocks() : Container() {
                         scaleX = 1,
                         time = TimeSpan(animationTime)
                     )
+                    block {
+                        firstBlock.removeFromParent()
+                    }
                 }
             }
         }
@@ -163,10 +166,10 @@ class UpcomingBlocks() : Container() {
                         view = hiddenBlock,
                         scaleX = secondBlockScale
                     )
-                }
-                block {
-                    upcomingBlocks[0] = secondBlock
-                    upcomingBlocks[1] = hiddenBlock
+                    block {
+                        upcomingBlocks[0] = secondBlock
+                        upcomingBlocks[1] = hiddenBlock
+                    }
                 }
             }
         }
@@ -181,3 +184,9 @@ class UpcomingBlocks() : Container() {
         strokeThickness = strokeThickness
     ).addTo(this)
 }
+
+data class BlockPositioning(
+    var x: Double = .0,
+    var y: Double = .0,
+    var size: Double = .0,
+)
